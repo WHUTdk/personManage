@@ -39,7 +39,7 @@ public class VehicleServiceImpl implements VehicleService {
     public VehicleVO getVehicleById(Integer id) throws Exception {
         VehicleDO vehicleDO = vehicleMapper.selectById(id);
         if (vehicleDO == null) {
-            throw new Exception("根据od查询数据不存在");
+            throw new Exception("根据id查询数据不存在");
         }
         return copyVehicleDOToVehicleVO(vehicleDO);
     }

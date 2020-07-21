@@ -112,7 +112,7 @@ public class PersonServiceImpl implements PersonService {
     public PersonVO getPersonById(Integer id) throws Exception {
         PersonDO personDO = personMapper.selectById(id);
         if (personDO == null) {
-            throw new Exception("根据od查询数据不存在");
+            throw new Exception("根据id查询数据不存在");
         }
         return copyPersonDOToPersonVO(personDO);
     }
