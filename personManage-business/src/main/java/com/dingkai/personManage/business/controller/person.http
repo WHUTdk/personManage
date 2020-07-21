@@ -37,12 +37,13 @@ POST http://localhost:8001/person/getPersonByCondition
 Accept: */*
 Cache-Control: no-cache
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaW5na2FpIiwic3ViIjoiZGluZ2thaSIsImlhdCI6MTU5NTAwMDE0NSwiZXhwIjoxNTk1MDAxOTQ1fQ.M6NgZ1y_Bk0TKcmFRYYv0OdyPrJZt0AjuzSMKltiNMed_jO1HoL5J0ERohQbIPCSFkWa5VP-_ei0UqPAlcqmTQ
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaW5na2FpIiwic3ViIjoiZGluZ2thaSIsImlhdCI6MTU5NTM0NDgyMSwiZXhwIjoxNTk1MzQ2NjIxfQ.ZV1rctg6M2_VwOwPntzT92Be4dvTHMyLhV6i8DHsMOR8dU62K4E9BKiPYuFmKoicjhhkQLxY1u4nfAcJkgPJEA
 
 {
   "name": "",
   "sex": 1,
-  "idNumber": ""
+  "idNumber": "",
+  "keyword": "11"
 }
 
 ### 条件导出
