@@ -87,29 +87,39 @@ public class PersonServiceImpl implements PersonService {
     private QueryWrapper<PersonDO> setQueryCondition(PersonQueryVO personQueryVO) {
         //查询条件设置
         QueryWrapper<PersonDO> queryWrapper = new QueryWrapper<>();
-        if (StringUtils.isNotEmpty(personQueryVO.getName())) {
-            queryWrapper.like("name", personQueryVO.getName());
-        }
-        if (StringUtils.isNotEmpty(personQueryVO.getIdNumber())) {
-            queryWrapper.like("id_number", personQueryVO.getIdNumber());
-        }
-        if (personQueryVO.getSex() != null) {
-            queryWrapper.eq("sex", personQueryVO.getSex());
+        String keyword = personQueryVO.getKeyword();
+        if (StringUtils.isEmpty(keyword)) {
+            if (StringUtils.isNotEmpty(personQueryVO.getName())) {
+                queryWrapper.like("name", personQueryVO.getName());
+            }
+            if (StringUtils.isNotEmpty(personQueryVO.getIdNumber())) {
+                queryWrapper.like("id_number", personQueryVO.getIdNumber());
+            }
+            if (personQueryVO.getSex() != null) {
+                queryWrapper.eq("sex", personQueryVO.getSex());
+            }
+        } else {
+            //关键字查询
+            queryWrapper.and(wrapper -> wrapper.like("name", keyword).or()
+                    .like("id_number", keyword).or()
+                    .like("residential_address", keyword).or()
+                    .like("household_address", keyword));
         }
         return queryWrapper;
     }
 
     @Override
-    public PersonVO getPersonById(Integer id) {
+    public PersonVO getPersonById(Integer id) throws Exception {
         PersonDO personDO = personMapper.selectById(id);
+        if (personDO == null) {
+            throw new Exception("根据od查询数据不存在");
+        }
         return copyPersonDOToPersonVO(personDO);
     }
 
     private PersonVO copyPersonDOToPersonVO(PersonDO personDO) {
         PersonVO personVO = new PersonVO();
         BeanUtils.copyProperties(personDO, personVO);
-        // TODO 民族代码转为名称
-
         //根据Id查询名下车辆
         List<VehicleVO> vehicleVOS = vehicleService.getVehicleVOSByPersonId(personDO.getId());
         personVO.setVehicleVOS(vehicleVOS);

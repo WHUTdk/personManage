@@ -32,12 +32,16 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public void deleteVehicleByIds(List<Integer> ids) {
-
+        vehicleMapper.deleteBatchIds(ids);
     }
 
     @Override
-    public VehicleVO getVehicleById(Integer id) {
-        return null;
+    public VehicleVO getVehicleById(Integer id) throws Exception {
+        VehicleDO vehicleDO = vehicleMapper.selectById(id);
+        if (vehicleDO == null) {
+            throw new Exception("根据od查询数据不存在");
+        }
+        return copyVehicleDOToVehicleVO(vehicleDO);
     }
 
     @Override

@@ -19,4 +19,6 @@ public class PersonQueryVO {
 
     private Integer sex;
 
+    private String keyword;
+
 }

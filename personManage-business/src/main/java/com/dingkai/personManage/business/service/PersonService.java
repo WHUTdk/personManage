@@ -14,7 +14,7 @@ public interface PersonService {
 
     PagedResponseVO<PersonVO> getPersonByCondition(PersonQueryVO personQueryVO);
 
-    PersonVO getPersonById(Integer id);
+    PersonVO getPersonById(Integer id) throws Exception;
 
     void deletePersonByIds(List<Integer> ids);
 

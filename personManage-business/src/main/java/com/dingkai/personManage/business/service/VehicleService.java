@@ -15,7 +15,7 @@ public interface VehicleService {
 
     void deleteVehicleByIds(List<Integer> ids);
 
-    VehicleVO getVehicleById(Integer id);
+    VehicleVO getVehicleById(Integer id) throws Exception;
 
     List<VehicleVO> getVehicleVOSByPersonId(Integer personId);
 
