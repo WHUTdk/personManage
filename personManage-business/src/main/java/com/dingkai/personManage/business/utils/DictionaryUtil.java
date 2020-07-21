@@ -19,6 +19,9 @@ public class DictionaryUtil {
     @Autowired
     private DictionaryService dictionaryService;
 
+    /**
+     * 对象字段值code转name
+     */
     public <T> void codeToName(T t) throws IllegalAccessException {
         Class<?> clazz = t.getClass();
         Field[] fields = clazz.getDeclaredFields();

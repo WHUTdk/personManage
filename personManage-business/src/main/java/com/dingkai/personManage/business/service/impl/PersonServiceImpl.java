@@ -47,6 +47,9 @@ public class PersonServiceImpl implements PersonService {
     @Autowired
     private DictionaryUtil dictionaryUtil;
 
+    /**
+     * 保存人员信息
+     */
     @Override
     public void savePerson(PersonVO personVO) {
         PersonDO personDO = new PersonDO();
@@ -60,6 +63,9 @@ public class PersonServiceImpl implements PersonService {
         }
     }
 
+    /**
+     * 条件查询人员信息
+     */
     @Override
     public PagedResponseVO<PersonVO> getPersonByCondition(PersonQueryVO personQueryVO) {
         Integer pageNo = personQueryVO.getPageNo();
@@ -84,6 +90,9 @@ public class PersonServiceImpl implements PersonService {
         return responseVO;
     }
 
+    /**
+     * 设置查询条件
+     */
     private QueryWrapper<PersonDO> setQueryCondition(PersonQueryVO personQueryVO) {
         //查询条件设置
         QueryWrapper<PersonDO> queryWrapper = new QueryWrapper<>();
@@ -108,6 +117,9 @@ public class PersonServiceImpl implements PersonService {
         return queryWrapper;
     }
 
+    /**
+     * 根据id查询人员信息
+     */
     @Override
     public PersonVO getPersonById(Integer id) throws Exception {
         PersonDO personDO = personMapper.selectById(id);
@@ -117,6 +129,9 @@ public class PersonServiceImpl implements PersonService {
         return copyPersonDOToPersonVO(personDO);
     }
 
+    /**
+     * DO-VO属性赋值
+     */
     private PersonVO copyPersonDOToPersonVO(PersonDO personDO) {
         PersonVO personVO = new PersonVO();
         BeanUtils.copyProperties(personDO, personVO);
@@ -126,6 +141,9 @@ public class PersonServiceImpl implements PersonService {
         return personVO;
     }
 
+    /**
+     * 根据id集合删除人员信息
+     */
     @Override
     public void deletePersonByIds(List<Integer> ids) {
         if (CollectionUtils.isNotEmpty(ids)) {
@@ -135,6 +153,9 @@ public class PersonServiceImpl implements PersonService {
         }
     }
 
+    /**
+     * 根据查询条件导出人员信息excel
+     */
     @Override
     public void exportPersonByCondition(PersonQueryVO personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException {
         ArrayList<PersonModel> personModels = new ArrayList<>();
@@ -142,6 +163,7 @@ public class PersonServiceImpl implements PersonService {
         QueryWrapper<PersonDO> queryWrapper = setQueryCondition(personQueryVO);
         List<PersonDO> personDOS = personMapper.selectList(queryWrapper);
         for (PersonDO personDO : personDOS) {
+            //根据人员名下车辆个数动态设置合并行数
             List<VehicleDO> vehicleDOS = vehicleService.getVehicleDOSByPersonId(personDO.getId());
             if (CollectionUtils.isEmpty(vehicleDOS)) {
                 groupCount.add(1);
@@ -151,7 +173,7 @@ public class PersonServiceImpl implements PersonService {
                 dictionaryUtil.codeToName(personModel);
                 personModels.add(personModel);
             } else {
-                //合并行数
+                //有多个车辆，需要合并行
                 groupCount.add(vehicleDOS.size());
                 for (VehicleDO vehicleDO : vehicleDOS) {
                     PersonModel personModel = new PersonModel();
@@ -164,6 +186,7 @@ public class PersonServiceImpl implements PersonService {
                 }
             }
         }
+        //合并策略
         PersonMergeStrategy personMergeStrategy = new PersonMergeStrategy(groupCount);
         EasyexcelUtil.write(response, personModels, PersonModel.class, "person_info", personMergeStrategy);
     }

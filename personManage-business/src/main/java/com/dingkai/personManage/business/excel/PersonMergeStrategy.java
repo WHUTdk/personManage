@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class PersonMergeStrategy extends AbstractMergeStrategy {
 
-    private List<Integer> groupCount;
+    private final List<Integer> groupCount;
     private Sheet sheet;
 
     public PersonMergeStrategy(List<Integer> groupCount) {
@@ -23,8 +23,10 @@ public class PersonMergeStrategy extends AbstractMergeStrategy {
 
 
     private void mergeGroupColumn(Integer index) {
+        //从内容的第一行开始
         int rowCnt = 1;
         for (Integer count : groupCount) {
+            //大于2才进行合并行
             if (count >= 2) {
                 CellRangeAddress cellRangeAddress = new CellRangeAddress(rowCnt, rowCnt + count - 1, index, index);
                 sheet.addMergedRegionUnsafe(cellRangeAddress);
@@ -34,7 +36,7 @@ public class PersonMergeStrategy extends AbstractMergeStrategy {
     }
 
     @Override
-    protected void merge(org.apache.poi.ss.usermodel.Sheet sheet, Cell cell, Head head, Integer integer) {
+    protected void merge(Sheet sheet, Cell cell, Head head, Integer integer) {
         this.sheet = sheet;
         if (cell.getRowIndex() == 1) {
             int columnIndex = cell.getColumnIndex();
