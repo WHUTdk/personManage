@@ -1,0 +1,162 @@
+package com.dingkai.personManage.business.service.impl;
+
+import com.alibaba.excel.EasyExcel;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.dingkai.personManage.business.dao.PersonMapper;
+import com.dingkai.personManage.business.dao.VehicleMapper;
+import com.dingkai.personManage.business.domain.PersonDO;
+import com.dingkai.personManage.business.domain.VehicleDO;
+import com.dingkai.personManage.business.excel.PersonMergeStrategy;
+import com.dingkai.personManage.business.excel.PersonModel;
+import com.dingkai.personManage.business.service.PersonService;
+import com.dingkai.personManage.business.service.VehicleService;
+import com.dingkai.personManage.business.utils.DictionaryUtil;
+import com.dingkai.personManage.business.utils.EasyexcelUtil;
+import com.dingkai.personManage.business.vo.PagedResponseVO;
+import com.dingkai.personManage.business.vo.PersonQueryVO;
+import com.dingkai.personManage.business.vo.PersonVO;
+import com.dingkai.personManage.business.vo.VehicleVO;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class PersonServiceImpl implements PersonService {
+
+    private static final Logger logger = LoggerFactory.getLogger(PersonServiceImpl.class);
+
+    @Resource
+    private PersonMapper personMapper;
+
+    @Resource
+    private VehicleService vehicleService;
+
+    @Autowired
+    private DictionaryUtil dictionaryUtil;
+
+    @Override
+    public void savePerson(PersonVO personVO) {
+        PersonDO personDO = new PersonDO();
+        BeanUtils.copyProperties(personVO, personDO);
+        if (personDO.getId() == null) {
+            //新增
+            personMapper.insert(personDO);
+        } else {
+            //更新
+            personMapper.updateById(personDO);
+        }
+    }
+
+    @Override
+    public PagedResponseVO<PersonVO> getPersonByCondition(PersonQueryVO personQueryVO) {
+        Integer pageNo = personQueryVO.getPageNo();
+        Integer pageSize = personQueryVO.getPageSize();
+        //分页参数
+        Page<PersonDO> page = new Page<>(pageNo, pageSize);
+        QueryWrapper<PersonDO> queryWrapper = setQueryCondition(personQueryVO);
+        IPage<PersonDO> iPage = personMapper.selectPage(page, queryWrapper);
+        //属性赋值
+        ArrayList<PersonVO> personVOS = new ArrayList<>();
+        List<PersonDO> personDOS = iPage.getRecords();
+        for (PersonDO personDO : personDOS) {
+            PersonVO personVO = copyPersonDOToPersonVO(personDO);
+            personVOS.add(personVO);
+        }
+        PagedResponseVO<PersonVO> responseVO = new PagedResponseVO<>();
+        responseVO.setPageNo(pageNo);
+        responseVO.setPageSize(pageSize);
+        responseVO.setTotal(iPage.getTotal());
+        responseVO.setTotalPages(iPage.getPages());
+        responseVO.setList(personVOS);
+        return responseVO;
+    }
+
+    private QueryWrapper<PersonDO> setQueryCondition(PersonQueryVO personQueryVO) {
+        //查询条件设置
+        QueryWrapper<PersonDO> queryWrapper = new QueryWrapper<>();
+        if (StringUtils.isNotEmpty(personQueryVO.getName())) {
+            queryWrapper.like("name", personQueryVO.getName());
+        }
+        if (StringUtils.isNotEmpty(personQueryVO.getIdNumber())) {
+            queryWrapper.like("id_number", personQueryVO.getIdNumber());
+        }
+        if (personQueryVO.getSex() != null) {
+            queryWrapper.eq("sex", personQueryVO.getSex());
+        }
+        return queryWrapper;
+    }
+
+    @Override
+    public PersonVO getPersonById(Integer id) {
+        PersonDO personDO = personMapper.selectById(id);
+        return copyPersonDOToPersonVO(personDO);
+    }
+
+    private PersonVO copyPersonDOToPersonVO(PersonDO personDO) {
+        PersonVO personVO = new PersonVO();
+        BeanUtils.copyProperties(personDO, personVO);
+        // TODO 民族代码转为名称
+
+        //根据Id查询名下车辆
+        List<VehicleVO> vehicleVOS = vehicleService.getVehicleVOSByPersonId(personDO.getId());
+        personVO.setVehicleVOS(vehicleVOS);
+        return personVO;
+    }
+
+    @Override
+    public void deletePersonByIds(List<Integer> ids) {
+        if (CollectionUtils.isNotEmpty(ids)) {
+            //删除名下车辆
+            vehicleService.deleteVehicleByPersonIds(ids);
+            personMapper.deleteBatchIds(ids);
+        }
+    }
+
+    @Override
+    public void exportPersonByCondition(PersonQueryVO personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException {
+        ArrayList<PersonModel> personModels = new ArrayList<>();
+        ArrayList<Integer> groupCount = new ArrayList<>();
+        QueryWrapper<PersonDO> queryWrapper = setQueryCondition(personQueryVO);
+        List<PersonDO> personDOS = personMapper.selectList(queryWrapper);
+        for (PersonDO personDO : personDOS) {
+            List<VehicleDO> vehicleDOS = vehicleService.getVehicleDOSByPersonId(personDO.getId());
+            if (CollectionUtils.isEmpty(vehicleDOS)) {
+                groupCount.add(1);
+                PersonModel personModel = new PersonModel();
+                BeanUtils.copyProperties(personDO, personModel);
+                personModel.setSex(String.valueOf(personDO.getSex()));
+                dictionaryUtil.codeToName(personModel);
+                personModels.add(personModel);
+            } else {
+                //合并行数
+                groupCount.add(vehicleDOS.size());
+                for (VehicleDO vehicleDO : vehicleDOS) {
+                    PersonModel personModel = new PersonModel();
+                    BeanUtils.copyProperties(personDO, personModel);
+                    BeanUtils.copyProperties(vehicleDO, personModel);
+                    personModel.setSex(String.valueOf(personDO.getSex()));
+                    personModel.setIsImport(String.valueOf(vehicleDO.getIsImport()));
+                    dictionaryUtil.codeToName(personModel);
+                    personModels.add(personModel);
+                }
+            }
+        }
+        PersonMergeStrategy personMergeStrategy = new PersonMergeStrategy(groupCount);
+        EasyexcelUtil.write(response, personModels, PersonModel.class, "person_info", personMergeStrategy);
+    }
+
+
+}

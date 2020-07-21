@@ -1,0 +1,25 @@
+### 用户登录
+POST http://localhost:8001/user/login
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{
+  "username": "dingkai",
+  "password": "dingkai"
+}
+
+### 新增
+POST http://localhost:8001/vehicle/saveVehicle
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaW5na2FpIiwic3ViIjoiZGluZ2thaSIsImlhdCI6MTU5NTA2NDIwMywiZXhwIjoxNTk1MDY2MDAzfQ.wGPXYz9iiDaD-jBYKlweyFlvT8mNgncZvyMZyS3zODWexASz2zkN-kDtjys81aGNyGnxbRAwbdVmkNfouKTAuA
+
+{
+  "plateNo": "浙B09237",
+  "brand": "本田",
+  "type": 1,
+  "personId": 2,
+  "isImport": 1
+}

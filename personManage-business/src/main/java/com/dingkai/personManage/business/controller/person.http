@@ -1,0 +1,106 @@
+### 新增
+POST http://localhost:8001/person/savePerson
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaW5na2FpIiwic3ViIjoiZGluZ2thaSIsImlhdCI6MTU5NTAwMDE0NSwiZXhwIjoxNTk1MDAxOTQ1fQ.M6NgZ1y_Bk0TKcmFRYYv0OdyPrJZt0AjuzSMKltiNMed_jO1HoL5J0ERohQbIPCSFkWa5VP-_ei0UqPAlcqmTQ
+
+{
+  "name": "蔡徐坤",
+  "sex": 1,
+  "idNumber": "920704199808025053",
+  "ethnicity": "12",
+  "birthday": "1998-08-02",
+  "residentialAddress": "浙江温州",
+  "householdAddress": "浙江温州"
+}
+
+### 更新
+POST http://localhost:8001/person/savePerson
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{
+  "id": 36,
+  "name": "丁凯6",
+  "sex": 1,
+  "idNumber": "420704199509045053",
+  "ethnicity": "1",
+  "birthday": "1995-09-04",
+  "residentialAddress": "湖北省鄂州市汀祖镇",
+  "householdAddress": "湖北省武汉市江夏区"
+}
+
+### 条件查询
+POST http://localhost:8001/person/getPersonByCondition
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaW5na2FpIiwic3ViIjoiZGluZ2thaSIsImlhdCI6MTU5NTAwMDE0NSwiZXhwIjoxNTk1MDAxOTQ1fQ.M6NgZ1y_Bk0TKcmFRYYv0OdyPrJZt0AjuzSMKltiNMed_jO1HoL5J0ERohQbIPCSFkWa5VP-_ei0UqPAlcqmTQ
+
+{
+  "name": "",
+  "sex": 1,
+  "idNumber": ""
+}
+
+### 条件导出
+POST http://localhost:8001/person/exportPersonByCondition
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaW5na2FpIiwic3ViIjoiZGluZ2thaSIsImlhdCI6MTU5NTA2NDIwMywiZXhwIjoxNTk1MDY2MDAzfQ.wGPXYz9iiDaD-jBYKlweyFlvT8mNgncZvyMZyS3zODWexASz2zkN-kDtjys81aGNyGnxbRAwbdVmkNfouKTAuA
+
+{
+  "name": "",
+  "sex": 1,
+  "idNumber": ""
+}
+
+### 根据id集合删除
+POST http://localhost:8001/person/deletePersonByIds
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaW5na2FpIiwic3ViIjoiZGluZ2thaSIsImlhdCI6MTU5NTAwMzM5MCwiZXhwIjoxNTk1MDA1MTkwfQ.0xcs2hR7mXm7txJrxF7KoGdaBTYdL2k1b9s5oo5bV5Xst0jkvyLvCYHFfm7kCCG4KyP5XFWLVJmhQNibWpWLkw
+
+{
+  "ids": [1]
+}
+
+### 根据id查询
+GET http://localhost:8001/person/getPersonById?id=1
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJkaW5na2FpIiwic3ViIjoiZGluZ2thaSIsImlhdCI6MTU5NTAwMzM5MCwiZXhwIjoxNTk1MDA1MTkwfQ.0xcs2hR7mXm7txJrxF7KoGdaBTYdL2k1b9s5oo5bV5Xst0jkvyLvCYHFfm7kCCG4KyP5XFWLVJmhQNibWpWLkw
+
+### 用户登录
+POST http://localhost:8001/user/login
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{
+  "username": "dingkai",
+  "password": "dingkai"
+}
+
+### 用户登出
+POST http://localhost:8001/user/logout
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+
+### 用户注册
+POST http://localhost:8001/user/register
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json
+
+{
+  "username": "dingkai",
+  "password": "dingkai"
+}
