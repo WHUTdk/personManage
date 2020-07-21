@@ -23,18 +23,31 @@ public class VehicleServiceImpl implements VehicleService {
     @Resource
     private VehicleMapper vehicleMapper;
 
+    /**
+     * 保存车辆信息
+     */
     @Override
-    public void saveVehicle(VehicleVO vehicleVO) {
+    public void saveVehicle(VehicleVO vehicleVO) throws Exception {
+        Integer personId = vehicleVO.getPersonId();
+        if (personId == null) {
+            throw new Exception("车辆必须关联用户id");
+        }
         VehicleDO vehicleDO = new VehicleDO();
         BeanUtils.copyProperties(vehicleVO, vehicleDO);
         vehicleDO.insertOrUpdate();
     }
 
+    /**
+     * 根据id集合删除车辆信息
+     */
     @Override
     public void deleteVehicleByIds(List<Integer> ids) {
         vehicleMapper.deleteBatchIds(ids);
     }
 
+    /**
+     * 根据id查询车辆信息
+     */
     @Override
     public VehicleVO getVehicleById(Integer id) throws Exception {
         VehicleDO vehicleDO = vehicleMapper.selectById(id);
@@ -44,6 +57,9 @@ public class VehicleServiceImpl implements VehicleService {
         return copyVehicleDOToVehicleVO(vehicleDO);
     }
 
+    /**
+     * 根据人员id获取人员名下车辆信息
+     */
     @Override
     public List<VehicleVO> getVehicleVOSByPersonId(Integer personId) {
         QueryWrapper<VehicleDO> queryWrapper = new QueryWrapper<>();
@@ -57,6 +73,9 @@ public class VehicleServiceImpl implements VehicleService {
         return vehicleVOS;
     }
 
+    /**
+     * 根据人员id获取人员名下车辆信息
+     */
     @Override
     public List<VehicleDO> getVehicleDOSByPersonId(Integer personId) {
         QueryWrapper<VehicleDO> queryWrapper = new QueryWrapper<>();
@@ -64,12 +83,18 @@ public class VehicleServiceImpl implements VehicleService {
         return vehicleMapper.selectList(queryWrapper);
     }
 
+    /**
+     * DO-VO属性赋值
+     */
     private VehicleVO copyVehicleDOToVehicleVO(VehicleDO vehicleDO) {
         VehicleVO vehicleVO = new VehicleVO();
         BeanUtils.copyProperties(vehicleDO, vehicleVO);
         return vehicleVO;
     }
 
+    /**
+     * 根据人员id删除人员名下车辆信息
+     */
     @Override
     public void deleteVehicleByPersonIds(List<Integer> personIds) {
         if (CollectionUtils.isNotEmpty(personIds)) {

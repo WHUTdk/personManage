@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface VehicleService {
 
-    void saveVehicle(VehicleVO vehicleVO);
+    void saveVehicle(VehicleVO vehicleVO) throws Exception;
 
     void deleteVehicleByIds(List<Integer> ids);
 
