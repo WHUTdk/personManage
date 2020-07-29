@@ -1,0 +1,5 @@
+### 根据身份证号查询
+GET http://localhost:8001/service/rs/personService/getPersonInfoByIdNumber?idNumber=
+Accept: */*
+Cache-Control: no-cache
+Content-Type: application/json

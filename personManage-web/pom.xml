@@ -25,6 +25,11 @@
             <artifactId>personManage-security</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.dingkai</groupId>
+            <artifactId>personManage-provider</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

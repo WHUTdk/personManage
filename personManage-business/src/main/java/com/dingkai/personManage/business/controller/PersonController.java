@@ -9,6 +9,7 @@ import com.dingkai.personManage.common.response.BaseResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
@@ -38,7 +39,7 @@ public class PersonController {
 
     @OperateLog
     @PostMapping("/getPersonByCondition")
-    public BaseResult getPersonByCondition(@RequestBody PersonQueryVO personQueryVO) {
+    public BaseResult getPersonByCondition(@RequestBody @Validated PersonQueryVO personQueryVO) {
         try {
             PagedResponseVO<PersonVO> personByCondition = personService.getPersonByCondition(personQueryVO);
             return BaseResult.success(personByCondition);

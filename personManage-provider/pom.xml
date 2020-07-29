@@ -11,5 +11,11 @@
 
     <artifactId>personManage-provider</artifactId>
 
-
+    <dependencies>
+        <dependency>
+            <groupId>com.dingkai</groupId>
+            <artifactId>personManage-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
 </project>
