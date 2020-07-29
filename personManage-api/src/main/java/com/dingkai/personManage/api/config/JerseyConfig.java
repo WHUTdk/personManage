@@ -14,7 +14,7 @@ import javax.ws.rs.ApplicationPath;
 public class JerseyConfig extends ResourceConfig {
 
     public JerseyConfig() {
-        packages("com.dingkai.personManage.api.service");
+        packages("com.dingkai.personManage.api");
     }
 
 }

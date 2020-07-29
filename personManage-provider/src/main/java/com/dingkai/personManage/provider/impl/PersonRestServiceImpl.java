@@ -13,7 +13,6 @@ public class PersonRestServiceImpl implements PersonRestService {
 
     @Override
     public BaseResult getPersonInfoByIdNumber(String idNumber) {
-
         return BaseResult.success();
     }
 }
