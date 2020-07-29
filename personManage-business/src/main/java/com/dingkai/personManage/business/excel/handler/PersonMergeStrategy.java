@@ -1,4 +1,4 @@
-package com.dingkai.personManage.business.excel;
+package com.dingkai.personManage.business.excel.handler;
 
 import com.alibaba.excel.metadata.Head;
 import com.alibaba.excel.write.merge.AbstractMergeStrategy;
@@ -40,6 +40,7 @@ public class PersonMergeStrategy extends AbstractMergeStrategy {
         this.sheet = sheet;
         if (cell.getRowIndex() == 1) {
             int columnIndex = cell.getColumnIndex();
+            //要合并列索引
             if (columnIndex >= 0 && columnIndex <= 6) {
                 this.mergeGroupColumn(columnIndex);
             }
