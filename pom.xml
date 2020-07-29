@@ -12,6 +12,8 @@
         <module>personManage-security</module>
         <module>personManage-web</module>
         <module>personManage-common</module>
+        <module>personManage-api</module>
+        <module>personManage-provider</module>
     </modules>
     <packaging>pom</packaging>
 
