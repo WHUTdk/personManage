@@ -1,6 +1,5 @@
 package com.dingkai.personManage.business.vo;
 
-import com.dingkai.personManage.business.annotation.CodeToName;
 import lombok.Data;
 
 /**

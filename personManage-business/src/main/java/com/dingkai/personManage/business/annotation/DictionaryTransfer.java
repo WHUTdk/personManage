@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CodeToName {
+public @interface DictionaryTransfer {
     String value();
 }

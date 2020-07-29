@@ -7,17 +7,21 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="personManage-common" />
-        <module name="personManage-business" />
-        <module name="personManage-web" />
         <module name="personManage-security" />
+        <module name="personManage-web" />
+        <module name="personManage-api" />
+        <module name="personManage-common" />
+        <module name="personManage-provider" />
+        <module name="personManage-business" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="personManage-api" options="-parameters" />
       <module name="personManage-business" options="-parameters" />
       <module name="personManage-common" options="-parameters" />
+      <module name="personManage-provider" options="-parameters" />
       <module name="personManage-security" options="-parameters" />
       <module name="personManage-web" options="-parameters" />
     </option>

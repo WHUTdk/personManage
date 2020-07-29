@@ -1,12 +1,10 @@
 package com.dingkai.personManage.business.service.impl;
 
-import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dingkai.personManage.business.dao.PersonMapper;
-import com.dingkai.personManage.business.dao.VehicleMapper;
 import com.dingkai.personManage.business.domain.PersonDO;
 import com.dingkai.personManage.business.domain.VehicleDO;
 import com.dingkai.personManage.business.excel.PersonMergeStrategy;
@@ -15,7 +13,7 @@ import com.dingkai.personManage.business.service.PersonService;
 import com.dingkai.personManage.business.service.VehicleService;
 import com.dingkai.personManage.business.utils.DictionaryUtil;
 import com.dingkai.personManage.business.utils.EasyexcelUtil;
-import com.dingkai.personManage.business.vo.PagedResponseVO;
+import com.dingkai.personManage.common.response.PagedResponseVO;
 import com.dingkai.personManage.business.vo.PersonQueryVO;
 import com.dingkai.personManage.business.vo.PersonVO;
 import com.dingkai.personManage.business.vo.VehicleVO;
@@ -29,7 +27,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 

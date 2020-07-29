@@ -1,9 +1,8 @@
 package com.dingkai.personManage.business.utils;
 
-import com.dingkai.personManage.business.annotation.CodeToName;
+import com.dingkai.personManage.business.annotation.DictionaryTransfer;
 import com.dingkai.personManage.business.service.DictionaryService;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.ss.formula.functions.T;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -27,9 +26,9 @@ public class DictionaryUtil {
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
             field.setAccessible(true);
-            CodeToName codeToName = field.getDeclaredAnnotation(CodeToName.class);
-            if (codeToName != null && StringUtils.isNotEmpty(codeToName.value()) && field.get(t) != null) {
-                String groupName = codeToName.value();
+            DictionaryTransfer dictionaryTransfer = field.getDeclaredAnnotation(DictionaryTransfer.class);
+            if (dictionaryTransfer != null && StringUtils.isNotEmpty(dictionaryTransfer.value()) && field.get(t) != null) {
+                String groupName = dictionaryTransfer.value();
                 String code = (String) field.get(t);
                 if (StringUtils.isNotEmpty(code)) {
                     String name = dictionaryService.getNameByGroupAndCode(groupName, code);

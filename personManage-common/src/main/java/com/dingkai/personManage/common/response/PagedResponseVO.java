@@ -1,4 +1,4 @@
-package com.dingkai.personManage.business.vo;
+package com.dingkai.personManage.common.response;
 
 import lombok.Data;
 

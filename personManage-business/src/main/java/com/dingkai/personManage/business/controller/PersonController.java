@@ -1,17 +1,11 @@
 package com.dingkai.personManage.business.controller;
 
-import com.alibaba.excel.write.metadata.style.WriteCellStyle;
-import com.alibaba.excel.write.metadata.style.WriteFont;
-import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import com.dingkai.personManage.business.annotation.OperateLog;
 import com.dingkai.personManage.business.service.PersonService;
-import com.dingkai.personManage.business.vo.PagedResponseVO;
+import com.dingkai.personManage.common.response.PagedResponseVO;
 import com.dingkai.personManage.business.vo.PersonQueryVO;
 import com.dingkai.personManage.business.vo.PersonVO;
 import com.dingkai.personManage.common.response.BaseResult;
-import org.apache.poi.hssf.usermodel.HSSFDataFormat;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.IndexedColors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

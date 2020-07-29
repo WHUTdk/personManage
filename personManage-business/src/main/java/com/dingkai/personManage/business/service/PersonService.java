@@ -1,6 +1,6 @@
 package com.dingkai.personManage.business.service;
 
-import com.dingkai.personManage.business.vo.PagedResponseVO;
+import com.dingkai.personManage.common.response.PagedResponseVO;
 import com.dingkai.personManage.business.vo.PersonQueryVO;
 import com.dingkai.personManage.business.vo.PersonVO;
 

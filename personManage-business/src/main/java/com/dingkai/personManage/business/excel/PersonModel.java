@@ -4,7 +4,7 @@ import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import com.alibaba.excel.annotation.write.style.ContentRowHeight;
 import com.alibaba.excel.annotation.write.style.HeadRowHeight;
-import com.dingkai.personManage.business.annotation.CodeToName;
+import com.dingkai.personManage.business.annotation.DictionaryTransfer;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -26,11 +26,11 @@ public class PersonModel {
     private String idNumber;
 
     @ExcelProperty(value = "性别", index = 2)
-    @CodeToName(value = "person_sex")
+    @DictionaryTransfer(value = "person_sex")
     private String sex;
 
     @ExcelProperty(value = "民族", index = 3)
-    @CodeToName(value = "person_ethnicity")
+    @DictionaryTransfer(value = "person_ethnicity")
     private String ethnicity;//民族
 
     @ExcelProperty(value = "出生日期", index = 4, converter = LocalDateConverter.class)
@@ -48,11 +48,11 @@ public class PersonModel {
     @ExcelProperty(value = "车辆品牌", index = 8)
     private String brand;
 
-    @CodeToName(value = "vehicle_type")
+    @DictionaryTransfer(value = "vehicle_type")
     @ExcelProperty(value = "车辆类型", index = 9)
     private String type;
 
     @ExcelProperty(value = "是否进口", index = 10)
-    @CodeToName(value = "vehicle_isImport")
+    @DictionaryTransfer(value = "vehicle_isImport")
     private String isImport;//是否进口，0否；1是
 }
