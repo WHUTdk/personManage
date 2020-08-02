@@ -195,7 +195,7 @@ public class PersonServiceImpl implements PersonService {
         ArrayList<PersonImportModel> list = new ArrayList<>();
         PersonImportModel personImportModel = new PersonImportModel();
         list.add(personImportModel);
-        EasyexcelUtil.write(response, list, PersonImportModel.class, "person_info", new PersonWriteHandler(dictionaryUtil));
+        EasyexcelUtil.write(response, list, PersonImportModel.class, "person_template", new PersonWriteHandler(dictionaryUtil));
     }
 
 

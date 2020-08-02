@@ -11,6 +11,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @Author dingkai
@@ -86,5 +88,19 @@ public class DictionaryUtil {
         return dictionaryDO.getCode();
     }
 
+    public List<String> getNameListByGroup(String groupName) {
+        ArrayList<String> list = new ArrayList<>();
+        List<DictionaryDO> DictionaryDOS = dictionaryMapper.selectList(
+                new QueryWrapper<DictionaryDO>().eq("group_name", groupName));
+        for (DictionaryDO dictionaryDO : DictionaryDOS) {
+            list.add(dictionaryDO.getName());
+        }
+        return list;
+    }
+
+    public String[] getNameArrayByGroup(String groupName) {
+        List<String> nameList = getNameListByGroup(groupName);
+        return nameList.toArray(new String[0]);
+    }
 
 }

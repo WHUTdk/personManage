@@ -7,6 +7,7 @@ import com.dingkai.personManage.business.domain.PersonDO;
 import com.dingkai.personManage.business.excel.PersonExportModel;
 import com.dingkai.personManage.business.excel.PersonImportModel;
 import com.dingkai.personManage.business.utils.DictionaryUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -67,10 +68,11 @@ public class PersonModelListener extends AnalysisEventListener<PersonImportModel
     private void handleData(List<PersonImportModel> list) {
         for (PersonImportModel personImportModel : list) {
             try {
+                dictionaryUtil.nameToCode(personImportModel);
                 PersonDO personDO = new PersonDO();
                 BeanUtils.copyProperties(personImportModel, personDO);
-                dictionaryUtil.nameToCode(personDO);
-                personDO.setSex(setPersonSex(personImportModel.getSex()));
+                String sex = personImportModel.getSex();
+                personDO.setSex(StringUtils.isEmpty(sex) ? null : Integer.parseInt(sex));
                 personMapper.insert(personDO);
             } catch (Exception e) {
                 logger.error("解析excel数据出错，excel数据：{}，错误信息：{}", personImportModel, e.getMessage());
@@ -78,14 +80,5 @@ public class PersonModelListener extends AnalysisEventListener<PersonImportModel
         }
     }
 
-    private int setPersonSex(String sex) {
-        if ("男".equals(sex)) {
-            return 1;
-        } else if ("女".equals(sex)) {
-            return 2;
-        } else {
-            return 0;
-        }
-    }
 
 }

@@ -26,7 +26,7 @@ public class PersonExportModel {
     private String idNumber;
 
     @ExcelProperty(value = "性别", index = 2)
-    //@DictionaryTransfer(value = "person_sex")
+    @DictionaryTransfer(value = "person_sex")
     private String sex;
 
     @ExcelProperty(value = "民族", index = 3)
@@ -53,6 +53,6 @@ public class PersonExportModel {
     private String type;
 
     @ExcelProperty(value = "是否进口", index = 10)
-    //@DictionaryTransfer(value = "vehicle_isImport")
+    @DictionaryTransfer(value = "vehicle_isImport")
     private String isImport;//是否进口，0否；1是
 }

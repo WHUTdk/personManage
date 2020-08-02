@@ -26,11 +26,12 @@ public class PersonImportModel {
     private String idNumber = "420704199509045053";
 
     @ExcelProperty(value = "性别", index = 2)
+    @DictionaryTransfer(value = "person_ethnicity")
     private String sex = "男";
 
     @ExcelProperty(value = "民族", index = 3)
     @DictionaryTransfer(value = "person_ethnicity")
-    private String ethnicity = "汉";//民族
+    private String ethnicity = "汉族";//民族
 
     @ExcelProperty(value = "出生日期", index = 4, converter = LocalDateConverter.class)
     private LocalDate birthday = LocalDate.now();
