@@ -22,10 +22,8 @@ public class DictionaryUtil {
      * 对象字段值code转name
      */
     public <T> void codeToName(T t) throws IllegalAccessException {
-        Class<?> clazz = t.getClass();
-        Field[] fields = clazz.getDeclaredFields();
+        Field[] fields = BeanUtil.getFields(t);
         for (Field field : fields) {
-            field.setAccessible(true);
             DictionaryTransfer dictionaryTransfer = field.getDeclaredAnnotation(DictionaryTransfer.class);
             if (dictionaryTransfer != null && StringUtils.isNotEmpty(dictionaryTransfer.value()) && field.get(t) != null) {
                 String groupName = dictionaryTransfer.value();
@@ -37,5 +35,24 @@ public class DictionaryUtil {
             }
         }
     }
+
+    /**
+     * 对象字段值name转code
+     */
+    public <T> void nameToCode(T t) throws IllegalAccessException {
+        Field[] fields = BeanUtil.getFields(t);
+        for (Field field : fields) {
+            DictionaryTransfer dictionaryTransfer = field.getDeclaredAnnotation(DictionaryTransfer.class);
+            if (dictionaryTransfer != null && StringUtils.isNotEmpty(dictionaryTransfer.value()) && field.get(t) != null) {
+                String groupName = dictionaryTransfer.value();
+                String name = (String) field.get(t);
+                if (StringUtils.isNotEmpty(name)) {
+                    String code = dictionaryService.getCodeByGroupAndName(groupName, name);
+                    field.set(t, code);
+                }
+            }
+        }
+    }
+
 
 }

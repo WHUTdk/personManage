@@ -13,6 +13,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.List;
 
@@ -22,60 +23,44 @@ import java.util.List;
  */
 public class EasyexcelUtil {
 
-    public static <T> void write(HttpServletResponse response, List<T> list, Class<T> tClass,
-                                 WriteHandler mergeStrategy, WriteHandler cellStyleStrategy,
-                                 String fileName) throws IOException {
-        if (cellStyleStrategy == null) {
-            cellStyleStrategy = setDefaultCellStyle();
-        }
+    public static void setExcelResponse(HttpServletResponse response, String fileName) throws UnsupportedEncodingException {
         response.setContentType("application/vnd.ms-excel");
         response.setCharacterEncoding("utf-8");
         // 这里URLEncoder.encode可以防止中文乱码
-        fileName = URLEncoder.encode("person_info", "UTF-8");
+        fileName = URLEncoder.encode(fileName, "UTF-8");
         response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx");
-        EasyExcel.write(response.getOutputStream(), tClass)
-                .registerWriteHandler(mergeStrategy)
-                .registerWriteHandler(cellStyleStrategy)
-                .sheet("sheet1").doWrite(list);
     }
 
     public static <T> void write(HttpServletResponse response, List<T> list, Class<T> tClass,
-                                 String fileName, AbstractMergeStrategy mergeStrategy) throws IOException {
-        response.setContentType("application/vnd.ms-excel");
-        response.setCharacterEncoding("utf-8");
-        // 这里URLEncoder.encode可以防止中文乱码
-        fileName = URLEncoder.encode("person_info", "UTF-8");
-        response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx");
+                                 String fileName, CellWriteHandler cellWriteHandler) throws IOException {
+        setExcelResponse(response, fileName);
         EasyExcel.write(response.getOutputStream(), tClass)
-                .registerWriteHandler(mergeStrategy)
+                .registerWriteHandler(cellWriteHandler)
                 .registerWriteHandler(setDefaultCellStyle())
                 .sheet("sheet1").doWrite(list);
     }
 
     public static <T> void write(HttpServletResponse response, List<T> list, Class<T> tClass,
-                                 CellWriteHandler cellStyleStrategy, String fileName) throws IOException {
-        if (cellStyleStrategy == null) {
-            cellStyleStrategy = setDefaultCellStyle();
-        }
-        response.setContentType("application/vnd.ms-excel");
-        response.setCharacterEncoding("utf-8");
-        // 这里URLEncoder.encode可以防止中文乱码
-        fileName = URLEncoder.encode("person_info", "UTF-8");
-        response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx");
+                                 String fileName, String sheetName, CellWriteHandler cellWriteHandler) throws IOException {
+        setExcelResponse(response, fileName);
         EasyExcel.write(response.getOutputStream(), tClass)
-                .registerWriteHandler(cellStyleStrategy)
-                .sheet("sheet1").doWrite(list);
+                .registerWriteHandler(cellWriteHandler)
+                .registerWriteHandler(setDefaultCellStyle())
+                .sheet(sheetName).doWrite(list);
     }
 
     public static <T> void write(HttpServletResponse response, List<T> list, Class<T> tClass, String fileName) throws IOException {
-        response.setContentType("application/vnd.ms-excel");
-        response.setCharacterEncoding("utf-8");
-        // 这里URLEncoder.encode可以防止中文乱码
-        fileName = URLEncoder.encode("person_info", "UTF-8");
-        response.setHeader("Content-disposition", "attachment;filename=" + fileName + ".xlsx");
+        setExcelResponse(response, fileName);
         EasyExcel.write(response.getOutputStream(), tClass)
                 .registerWriteHandler(setDefaultCellStyle())
                 .sheet("sheet1").doWrite(list);
+    }
+
+    public static <T> void write(HttpServletResponse response, List<T> list, Class<T> tClass, String fileName, String sheetName) throws IOException {
+        setExcelResponse(response, fileName);
+        EasyExcel.write(response.getOutputStream(), tClass)
+                .registerWriteHandler(setDefaultCellStyle())
+                .sheet(sheetName).doWrite(list);
     }
 
     private static HorizontalCellStyleStrategy setDefaultCellStyle() {

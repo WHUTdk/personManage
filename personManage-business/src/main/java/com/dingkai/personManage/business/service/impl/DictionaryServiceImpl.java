@@ -31,9 +31,25 @@ public class DictionaryServiceImpl implements DictionaryService {
         queryWrapper.eq("code", code);
         DictionaryDO dictionaryDO = dictionaryMapper.selectOne(queryWrapper);
         if (dictionaryDO == null || StringUtils.isEmpty(dictionaryDO.getName())) {
-            logger.error("根据groupName：{}和code：{}获取到的值为空", groupName, code);
+            logger.error("根据groupName：{}和code：{}获取到的name为空", groupName, code);
             return null;
         }
         return dictionaryDO.getName();
     }
+
+    @Override
+    public String getCodeByGroupAndName(String groupName, String name) {
+        //一般是查询缓存
+        QueryWrapper<DictionaryDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("group_name", groupName);
+        queryWrapper.eq("name", name);
+        DictionaryDO dictionaryDO = dictionaryMapper.selectOne(queryWrapper);
+        if (dictionaryDO == null || StringUtils.isEmpty(dictionaryDO.getCode())) {
+            logger.error("根据groupName：{}和name：{}获取到的code为空", groupName, name);
+            return null;
+        }
+        return dictionaryDO.getCode();
+    }
+
+
 }

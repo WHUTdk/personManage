@@ -8,4 +8,6 @@ public interface DictionaryService {
 
     String getNameByGroupAndCode(String groupName,String code);
 
+    String getCodeByGroupAndName(String groupName,String name);
+
 }

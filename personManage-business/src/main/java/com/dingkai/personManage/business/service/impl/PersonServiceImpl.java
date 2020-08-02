@@ -8,7 +8,7 @@ import com.dingkai.personManage.business.dao.PersonMapper;
 import com.dingkai.personManage.business.domain.PersonDO;
 import com.dingkai.personManage.business.domain.VehicleDO;
 import com.dingkai.personManage.business.excel.handler.PersonMergeStrategy;
-import com.dingkai.personManage.business.excel.PersonModel;
+import com.dingkai.personManage.business.excel.PersonExportModel;
 import com.dingkai.personManage.business.service.PersonService;
 import com.dingkai.personManage.business.service.VehicleService;
 import com.dingkai.personManage.business.utils.DictionaryUtil;
@@ -155,7 +155,7 @@ public class PersonServiceImpl implements PersonService {
      */
     @Override
     public void exportPersonByCondition(PersonQueryVO personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException {
-        ArrayList<PersonModel> personModels = new ArrayList<>();
+        ArrayList<PersonExportModel> personExportModels = new ArrayList<>();
         ArrayList<Integer> groupCount = new ArrayList<>();
         QueryWrapper<PersonDO> queryWrapper = setQueryCondition(personQueryVO);
         List<PersonDO> personDOS = personMapper.selectList(queryWrapper);
@@ -164,29 +164,30 @@ public class PersonServiceImpl implements PersonService {
             List<VehicleDO> vehicleDOS = vehicleService.getVehicleDOSByPersonId(personDO.getId());
             if (CollectionUtils.isEmpty(vehicleDOS)) {
                 groupCount.add(1);
-                PersonModel personModel = new PersonModel();
-                BeanUtils.copyProperties(personDO, personModel);
-                personModel.setSex(String.valueOf(personDO.getSex()));
-                dictionaryUtil.codeToName(personModel);
-                personModels.add(personModel);
+                PersonExportModel personExportModel = new PersonExportModel();
+                BeanUtils.copyProperties(personDO, personExportModel);
+                personExportModel.setSex(String.valueOf(personDO.getSex()));
+                dictionaryUtil.codeToName(personExportModel);
+                personExportModels.add(personExportModel);
             } else {
                 //有多个车辆，需要合并行
                 groupCount.add(vehicleDOS.size());
                 for (VehicleDO vehicleDO : vehicleDOS) {
-                    PersonModel personModel = new PersonModel();
-                    BeanUtils.copyProperties(personDO, personModel);
-                    BeanUtils.copyProperties(vehicleDO, personModel);
-                    personModel.setSex(String.valueOf(personDO.getSex()));
-                    personModel.setIsImport(String.valueOf(vehicleDO.getIsImport()));
-                    dictionaryUtil.codeToName(personModel);
-                    personModels.add(personModel);
+                    PersonExportModel personExportModel = new PersonExportModel();
+                    BeanUtils.copyProperties(personDO, personExportModel);
+                    BeanUtils.copyProperties(vehicleDO, personExportModel);
+                    personExportModel.setSex(String.valueOf(personDO.getSex()));
+                    personExportModel.setIsImport(String.valueOf(vehicleDO.getIsImport()));
+                    dictionaryUtil.codeToName(personExportModel);
+                    personExportModels.add(personExportModel);
                 }
             }
         }
         //合并策略
         PersonMergeStrategy personMergeStrategy = new PersonMergeStrategy(groupCount);
-        EasyexcelUtil.write(response, personModels, PersonModel.class, "person_info", personMergeStrategy);
+        EasyexcelUtil.write(response, personExportModels, PersonExportModel.class, "person_info", personMergeStrategy);
     }
+
 
 
 }
