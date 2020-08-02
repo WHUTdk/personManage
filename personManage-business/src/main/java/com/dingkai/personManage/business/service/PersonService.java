@@ -19,4 +19,6 @@ public interface PersonService {
     void deletePersonByIds(List<Integer> ids);
 
     void exportPersonByCondition(PersonQueryVO personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException;
+
+    void downloadTemplate(HttpServletResponse response) throws IOException;
 }

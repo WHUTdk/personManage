@@ -1,11 +1,15 @@
 package com.dingkai.personManage.business.utils;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dingkai.personManage.business.annotation.DictionaryTransfer;
-import com.dingkai.personManage.business.service.DictionaryService;
+import com.dingkai.personManage.business.dao.DictionaryMapper;
+import com.dingkai.personManage.business.domain.DictionaryDO;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.lang.reflect.Field;
 
 /**
@@ -15,8 +19,10 @@ import java.lang.reflect.Field;
 @Component
 public class DictionaryUtil {
 
-    @Autowired
-    private DictionaryService dictionaryService;
+    private static final Logger logger = LoggerFactory.getLogger(DictionaryUtil.class);
+
+    @Resource
+    private DictionaryMapper dictionaryMapper;
 
     /**
      * 对象字段值code转name
@@ -29,7 +35,7 @@ public class DictionaryUtil {
                 String groupName = dictionaryTransfer.value();
                 String code = (String) field.get(t);
                 if (StringUtils.isNotEmpty(code)) {
-                    String name = dictionaryService.getNameByGroupAndCode(groupName, code);
+                    String name = getNameByGroupAndCode(groupName, code);
                     field.set(t, name);
                 }
             }
@@ -47,11 +53,37 @@ public class DictionaryUtil {
                 String groupName = dictionaryTransfer.value();
                 String name = (String) field.get(t);
                 if (StringUtils.isNotEmpty(name)) {
-                    String code = dictionaryService.getCodeByGroupAndName(groupName, name);
+                    String code = getCodeByGroupAndName(groupName, name);
                     field.set(t, code);
                 }
             }
         }
+    }
+
+    public String getNameByGroupAndCode(String groupName, String code) {
+        //一般是查询缓存
+        QueryWrapper<DictionaryDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("group_name", groupName);
+        queryWrapper.eq("code", code);
+        DictionaryDO dictionaryDO = dictionaryMapper.selectOne(queryWrapper);
+        if (dictionaryDO == null || StringUtils.isEmpty(dictionaryDO.getName())) {
+            logger.error("根据groupName：{}和code：{}获取到的name为空", groupName, code);
+            return null;
+        }
+        return dictionaryDO.getName();
+    }
+
+    public String getCodeByGroupAndName(String groupName, String name) {
+        //一般是查询缓存
+        QueryWrapper<DictionaryDO> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("group_name", groupName);
+        queryWrapper.eq("name", name);
+        DictionaryDO dictionaryDO = dictionaryMapper.selectOne(queryWrapper);
+        if (dictionaryDO == null || StringUtils.isEmpty(dictionaryDO.getCode())) {
+            logger.error("根据groupName：{}和name：{}获取到的code为空", groupName, name);
+            return null;
+        }
+        return dictionaryDO.getCode();
     }
 
 

@@ -87,8 +87,8 @@ public class PersonController {
     @OperateLog
     @GetMapping("/exportPerson")
     public void exportPerson(Integer sex,
-                                   String IdNumber,
-                                   HttpServletResponse response) {
+                             String IdNumber,
+                             HttpServletResponse response) {
         try {
             PersonQueryVO personQueryVO = new PersonQueryVO();
             personQueryVO.setSex(sex);
@@ -96,6 +96,16 @@ public class PersonController {
             personService.exportPersonByCondition(personQueryVO, response);
         } catch (Exception e) {
             logger.error("条件导出人员信息出错，错误信息：{}", e.getMessage());
+        }
+    }
+
+    @OperateLog
+    @GetMapping("/downloadTemplate")
+    public void downloadTemplate(HttpServletResponse response) {
+        try {
+            personService.downloadTemplate(response);
+        } catch (Exception e) {
+            logger.error("下载人员导入模板出错，错误信息：{}", e.getMessage());
         }
     }
 

@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dingkai.personManage.business.dao.PersonMapper;
 import com.dingkai.personManage.business.domain.PersonDO;
 import com.dingkai.personManage.business.domain.VehicleDO;
+import com.dingkai.personManage.business.excel.PersonImportModel;
 import com.dingkai.personManage.business.excel.handler.PersonWriteHandler;
 import com.dingkai.personManage.business.excel.PersonExportModel;
 import com.dingkai.personManage.business.service.PersonService;
@@ -43,6 +44,7 @@ public class PersonServiceImpl implements PersonService {
 
     @Autowired
     private DictionaryUtil dictionaryUtil;
+
 
     /**
      * 保存人员信息
@@ -156,14 +158,14 @@ public class PersonServiceImpl implements PersonService {
     @Override
     public void exportPersonByCondition(PersonQueryVO personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException {
         ArrayList<PersonExportModel> personExportModels = new ArrayList<>();
-        ArrayList<Integer> groupCount = new ArrayList<>();
+        ArrayList<Integer> mergeCount = new ArrayList<>();
         QueryWrapper<PersonDO> queryWrapper = setQueryCondition(personQueryVO);
         List<PersonDO> personDOS = personMapper.selectList(queryWrapper);
         for (PersonDO personDO : personDOS) {
             //根据人员名下车辆个数动态设置合并行数
             List<VehicleDO> vehicleDOS = vehicleService.getVehicleDOSByPersonId(personDO.getId());
             if (CollectionUtils.isEmpty(vehicleDOS)) {
-                groupCount.add(1);
+                mergeCount.add(1);
                 PersonExportModel personExportModel = new PersonExportModel();
                 BeanUtils.copyProperties(personDO, personExportModel);
                 personExportModel.setSex(String.valueOf(personDO.getSex()));
@@ -171,7 +173,7 @@ public class PersonServiceImpl implements PersonService {
                 personExportModels.add(personExportModel);
             } else {
                 //有多个车辆，需要合并行
-                groupCount.add(vehicleDOS.size());
+                mergeCount.add(vehicleDOS.size());
                 for (VehicleDO vehicleDO : vehicleDOS) {
                     PersonExportModel personExportModel = new PersonExportModel();
                     BeanUtils.copyProperties(personDO, personExportModel);
@@ -184,10 +186,17 @@ public class PersonServiceImpl implements PersonService {
             }
         }
         //合并策略
-        PersonWriteHandler personWriteHandler = new PersonWriteHandler(groupCount);
+        PersonWriteHandler personWriteHandler = new PersonWriteHandler(mergeCount);
         EasyexcelUtil.write(response, personExportModels, PersonExportModel.class, "person_info", personWriteHandler);
     }
 
+    @Override
+    public void downloadTemplate(HttpServletResponse response) throws IOException {
+        ArrayList<PersonImportModel> list = new ArrayList<>();
+        PersonImportModel personImportModel = new PersonImportModel();
+        list.add(personImportModel);
+        EasyexcelUtil.write(response, list, PersonImportModel.class, "person_info", new PersonWriteHandler(dictionaryUtil));
+    }
 
 
 }

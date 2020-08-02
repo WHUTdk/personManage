@@ -5,10 +5,12 @@ import com.alibaba.excel.metadata.Head;
 import com.alibaba.excel.write.merge.AbstractMergeStrategy;
 import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;
 import com.alibaba.excel.write.metadata.holder.WriteTableHolder;
+import com.dingkai.personManage.business.utils.DictionaryUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,18 +19,22 @@ import java.util.List;
  */
 public class PersonWriteHandler extends AbstractMergeStrategy {
 
-    private final List<Integer> groupCount;
+    private List<Integer> mergeCount = new ArrayList<>();
     private Sheet sheet;
+    private DictionaryUtil dictionaryUtil;
 
-    public PersonWriteHandler(List<Integer> groupCount) {
-        this.groupCount = groupCount;
+    public PersonWriteHandler(List<Integer> mergeCount) {
+        this.mergeCount = mergeCount;
     }
 
+    public PersonWriteHandler(DictionaryUtil dictionaryUtil) {
+        this.dictionaryUtil = dictionaryUtil;
+    }
 
     private void mergeGroupColumn(Integer index) {
         //从内容的第一行开始
         int rowCnt = 1;
-        for (Integer count : groupCount) {
+        for (Integer count : mergeCount) {
             //大于2才进行合并行
             if (count >= 2) {
                 CellRangeAddress cellRangeAddress = new CellRangeAddress(rowCnt, rowCnt + count - 1, index, index);
