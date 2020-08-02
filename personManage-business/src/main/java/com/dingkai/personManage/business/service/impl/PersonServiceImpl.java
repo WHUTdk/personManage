@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dingkai.personManage.business.dao.PersonMapper;
 import com.dingkai.personManage.business.domain.PersonDO;
 import com.dingkai.personManage.business.domain.VehicleDO;
-import com.dingkai.personManage.business.excel.handler.PersonMergeStrategy;
+import com.dingkai.personManage.business.excel.handler.PersonWriteHandler;
 import com.dingkai.personManage.business.excel.PersonExportModel;
 import com.dingkai.personManage.business.service.PersonService;
 import com.dingkai.personManage.business.service.VehicleService;
@@ -184,8 +184,8 @@ public class PersonServiceImpl implements PersonService {
             }
         }
         //合并策略
-        PersonMergeStrategy personMergeStrategy = new PersonMergeStrategy(groupCount);
-        EasyexcelUtil.write(response, personExportModels, PersonExportModel.class, "person_info", personMergeStrategy);
+        PersonWriteHandler personWriteHandler = new PersonWriteHandler(groupCount);
+        EasyexcelUtil.write(response, personExportModels, PersonExportModel.class, "person_info", personWriteHandler);
     }
 
 

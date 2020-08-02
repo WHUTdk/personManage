@@ -1,7 +1,10 @@
 package com.dingkai.personManage.business.excel.handler;
 
+import com.alibaba.excel.metadata.CellData;
 import com.alibaba.excel.metadata.Head;
 import com.alibaba.excel.write.merge.AbstractMergeStrategy;
+import com.alibaba.excel.write.metadata.holder.WriteSheetHolder;
+import com.alibaba.excel.write.metadata.holder.WriteTableHolder;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -12,12 +15,12 @@ import java.util.List;
  * @Author dingkai
  * @Date 2020/7/18 14:20
  */
-public class PersonMergeStrategy extends AbstractMergeStrategy {
+public class PersonWriteHandler extends AbstractMergeStrategy {
 
     private final List<Integer> groupCount;
     private Sheet sheet;
 
-    public PersonMergeStrategy(List<Integer> groupCount) {
+    public PersonWriteHandler(List<Integer> groupCount) {
         this.groupCount = groupCount;
     }
 
@@ -46,4 +49,11 @@ public class PersonMergeStrategy extends AbstractMergeStrategy {
             }
         }
     }
+
+    public void afterCellDispose(WriteSheetHolder writeSheetHolder, WriteTableHolder writeTableHolder, List<CellData> cellDataList, Cell cell, Head head, Integer relativeRowIndex, Boolean isHead) {
+        if (!isHead) {
+            this.merge(writeSheetHolder.getSheet(), cell, head, relativeRowIndex);
+        }
+    }
+
 }

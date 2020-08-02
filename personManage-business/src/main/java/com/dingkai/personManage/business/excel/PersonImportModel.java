@@ -20,25 +20,25 @@ import java.time.LocalDate;
 public class PersonImportModel {
 
     @ExcelProperty(value = "姓名", index = 0)
-    private String name;
+    private String name = "姓名（导入时删除该行）";
 
     @ExcelProperty(value = "身份证号", index = 1)
-    private String idNumber;
+    private String idNumber = "420704199509045053";
 
     @ExcelProperty(value = "性别", index = 2)
-    private String sex;
+    private String sex = "男";
 
     @ExcelProperty(value = "民族", index = 3)
     @DictionaryTransfer(value = "person_ethnicity")
-    private String ethnicity;//民族
+    private String ethnicity = "汉";//民族
 
     @ExcelProperty(value = "出生日期", index = 4, converter = LocalDateConverter.class)
-    private LocalDate birthday;
+    private LocalDate birthday = LocalDate.now();
 
     @ExcelProperty(value = "居住地址", index = 5)
-    private String residentialAddress;//居住地址
+    private String residentialAddress = "湖北省鄂州市汀祖镇";//居住地址
 
     @ExcelProperty(value = "户籍地址", index = 6)
-    private String householdAddress;//户籍地址
+    private String householdAddress = "湖北省武汉市江夏区";//户籍地址
 
 }
