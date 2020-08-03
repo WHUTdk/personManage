@@ -21,7 +21,8 @@ public class AccessInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
-        logger.info("进入拦截器中...");
+        String requestURI = httpServletRequest.getRequestURI();
+        logger.info("进入拦截器中...拦截uri：{}",requestURI);
         return true;
     }
 

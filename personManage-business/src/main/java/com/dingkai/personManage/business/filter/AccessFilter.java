@@ -33,7 +33,7 @@ public class AccessFilter implements Filter {
             //替换自定义包装类，解决输入流无法重复读取的问题
             HttpServletRequest request = (HttpServletRequest) servletRequest;
             String requestURI = request.getRequestURI();
-            if (!requestURI.contains("import") && !requestURI.contains("upload")) {
+            if (!requestURI.contains("import") && !requestURI.contains("upload") && !requestURI.contains("swagger")) {
                 //排除上传、导入等方法
                 requestWrapper = new RequestWrapper(request);
             }

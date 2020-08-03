@@ -72,7 +72,7 @@ public class PersonModelListener extends AnalysisEventListener<PersonImportModel
                 PersonDO personDO = new PersonDO();
                 BeanUtils.copyProperties(personImportModel, personDO);
                 String sex = personImportModel.getSex();
-                personDO.setSex(StringUtils.isEmpty(sex) ? null : Integer.parseInt(sex));
+                personDO.setSex(StringUtils.isEmpty(sex) ? 0 : Integer.parseInt(sex));
                 personMapper.insert(personDO);
             } catch (Exception e) {
                 logger.error("解析excel数据出错，excel数据：{}，错误信息：{}", personImportModel, e.getMessage());

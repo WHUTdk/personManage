@@ -24,9 +24,6 @@ public class UserDO implements UserDetails {
 
     private String password;
 
-//    @TableField(exist = false)
-//    private String token;
-
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
