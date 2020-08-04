@@ -9,7 +9,9 @@ import com.alibaba.excel.write.metadata.style.WriteFont;
 import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import org.apache.poi.hssf.usermodel.HSSFDataFormat;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -76,6 +78,8 @@ public class EasyexcelUtil {
         HSSFDataFormat dataFormat = new HSSFWorkbook().createDataFormat();
         // 本文格式
         contentWriteCellStyle.setDataFormat(dataFormat.getFormat("@"));
+        contentWriteCellStyle.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        contentWriteCellStyle.setVerticalAlignment(VerticalAlignment.CENTER);
         // 填充类型 这里需要指定 FillPatternType 为FillPatternType.SOLID_FOREGROUND 不然无法显示背景颜色.头默认了 FillPatternType所以可以不指定
         //contentWriteCellStyle.setFillPatternType(FillPatternType.SOLID_FOREGROUND);
         // 背景绿色
