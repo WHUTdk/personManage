@@ -16,7 +16,7 @@ import org.springframework.util.LinkedMultiValueMap;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class MyTest {
+public class HttpTest {
 
     @Autowired
     private HttpUtil httpUtil;
