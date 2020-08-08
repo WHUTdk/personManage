@@ -24,11 +24,6 @@ public class TaskService {
 
     @Async("myAsyncTaskExecutor")
     public void test() {
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         int activeCount = threadPoolTaskExecutor.getActiveCount();
         String name = Thread.currentThread().getName();
         logger.info("当前线程名称：{},当前异步线程池活跃线程数：{}", name, activeCount);

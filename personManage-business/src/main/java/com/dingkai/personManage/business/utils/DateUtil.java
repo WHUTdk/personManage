@@ -183,21 +183,11 @@ public class DateUtil extends DateUtils {
     }
 
     /**
-     * 给字符串日期增加（减少）指定时间
+     * 给日期增加（减少）指定时间
      *
-     * @param strTime       日期字符串
-     * @param format        日期格式
-     * @param calendarField 时间类型
-     * @param amount        数量
+     * @param calendarField 时间类型,见CalendarField枚举类
+     * @param amount        数量，可以为负数
      */
-    public static Date add(String strTime, String format, int calendarField, int amount) throws ParseException {
-        Date date = stringToDate(strTime, format);
-        Calendar c = Calendar.getInstance();
-        c.setTime(date);
-        c.add(calendarField, amount);
-        return c.getTime();
-    }
-
     public static Date add(Date date, int calendarField, int amount) {
         Calendar c = Calendar.getInstance();
         c.setTime(date);
@@ -207,7 +197,7 @@ public class DateUtil extends DateUtils {
 
 
     public static void main(String[] args) throws ParseException {
-        Date date = add("2020-08-01", "yyyy-MM-dd", CalendarField.Day.getIndex(), -10);
+        Date date = add(stringToDate("2020-08-01", "yyyy-MM-dd"), CalendarField.Day.getIndex(), -10);
         System.out.println(date);
         Date date1 = add(new Date(), CalendarField.Hour.getIndex(), -1);
         System.out.println(date1);
