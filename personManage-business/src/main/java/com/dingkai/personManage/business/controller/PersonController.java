@@ -1,6 +1,7 @@
 package com.dingkai.personManage.business.controller;
 
 import com.dingkai.personManage.business.annotation.OperateLog;
+import com.dingkai.personManage.business.annotation.SubmitLock;
 import com.dingkai.personManage.business.service.PersonService;
 import com.dingkai.personManage.common.response.PagedResponseVO;
 import com.dingkai.personManage.business.vo.PersonQueryVO;
@@ -30,6 +31,7 @@ public class PersonController {
 
     @ApiOperation(value = "保存人员信息")
     @OperateLog
+    @SubmitLock
     @PostMapping("/savePerson")
     public BaseResult savePerson(@RequestBody PersonVO personVO) {
         try {

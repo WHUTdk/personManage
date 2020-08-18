@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.dingkai.personManage.business.bo.OperateLogBO;
 import com.dingkai.personManage.business.config.RequestHolder;
 import com.dingkai.personManage.business.filter.RequestWrapper;
+import com.dingkai.personManage.business.utils.IpUtil;
 import com.dingkai.personManage.common.response.BaseResult;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -11,6 +12,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +24,7 @@ import java.time.LocalDateTime;
  */
 @Component
 @Aspect
+@Order(1)
 public class OperateLogAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(OperateLogAspect.class);
@@ -41,7 +44,7 @@ public class OperateLogAspect {
         //获取用户、ip信息、请求信息
         RequestWrapper request = RequestHolder.getRequest();
         operateLogBO.setOperateUsername(getUsername(request));
-        operateLogBO.setOperateIp(getIpAddress(request));
+        operateLogBO.setOperateIp(IpUtil.getIpAddress(request));
         String requestUrl = request.getRequestURL().toString();
         operateLogBO.setRequestUrl(requestUrl);
         operateLogBO.setRequestParam(request.getQueryString());
@@ -56,37 +59,18 @@ public class OperateLogAspect {
         } catch (Throwable throwable) {
             throwable.printStackTrace();
             operateLogBO.setOperateResult(false);
+            return BaseResult.error("-1", throwable.getMessage());
         } finally {
             logger.info("操作日志：{}", JSON.toJSONString(operateLogBO));
         }
-        return null;
-    }
-
-    public String getIpAddress(HttpServletRequest request) {
-        String ip = request.getHeader("x-forwarded-for");
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        }
-        if (ip == null || ip.length() == 0 || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
+        //return null;
     }
 
     public String getUsername(HttpServletRequest request) {
         try {
             return request.getUserPrincipal().getName();
         } catch (Exception e) {
-            logger.error("获取登录用户出错，错误信息：{}",e.getMessage());
+            logger.error("获取登录用户出错，错误信息：{}", e.getMessage());
         }
         return "";
     }
