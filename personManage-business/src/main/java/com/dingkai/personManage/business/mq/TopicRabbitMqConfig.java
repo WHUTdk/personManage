@@ -12,7 +12,7 @@ import org.springframework.context.annotation.PropertySource;
  * @Date 2020/8/10 22:14
  */
 @Configuration
-@PropertySource("classpath:valueConfig.properties")
+@PropertySource("classpath:mq.properties")
 public class TopicRabbitMqConfig {
 
     //队列名称

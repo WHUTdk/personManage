@@ -15,7 +15,7 @@ public class RabbitMqProducer {
     private AmqpTemplate rabbitMqTemplate;
 
     public void sendMessage(){
-        rabbitMqTemplate.convertAndSend("test_topic_exchange","test.dingkai.key","test");
+        rabbitMqTemplate.convertAndSend("test_topic_exchange","test.dingkai.key","rmq消息发送");
     }
 
 }

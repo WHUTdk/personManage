@@ -23,8 +23,10 @@ public class RabbitMqTest {
     private AmqpTemplate rabbitMqTemplate;
 
     @Test
-    public void producerTest(){
+    public void producerTest() throws InterruptedException {
         rabbitMqProducer.sendMessage();
+        Thread.sleep(5000);
+
     }
 
 }
