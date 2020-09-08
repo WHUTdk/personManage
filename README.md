@@ -1,4 +1,18 @@
 # personManage
+spring bean生命周期
+
+    1.实例化Bean对象
+    2.设置对象属性
+    3.检查是否实现Aware接口，实现Aware接口的Bean能感知自身相关属性（spring会给Bean设置相关参数比如BeanName）
+    4.执行BeanPostProcessor前置处理
+    5.检查是否实现InitializingBean接口，以决定是否调用afterPropertiesSet方法
+    6.检查是否配置自定义的init-method方法
+    7.执行BeanPostProcessor后置处理
+    8.注册必要的Destrucuion相关回调接口
+    9.使用中...
+    10.检查是否实现DisposableBean接口，执行destroy方法
+    11.检查是否配置自定义销毁方法，有的话执行
+
 spring循环依赖和三级缓存
 
 循环依赖
@@ -51,10 +65,18 @@ jvm内存结构
 
     1.寄存器：较小的内存空间，通过计数器选取下一条要执行的字节码指令
     2.虚拟机栈：线程运行需要的内存空间，每个方法运行时会创建一个栈帧，保存方法参数、局部变量、返回值等信息
-    3.本地方法栈
+    3.本地方法栈:非Java代码方法运行时需要的内存空间，比如Object类的clone()、notify()、hashCode()
     4.堆
-    5.方法区
+    5.方法区：线程共享。包括类信息（方法、字段、构造器）、运行时常量池、静态变量
+            方法区是一种规范，具体实现有永久代（1.8之前，PermGen在jvm内存）和元空间（Metaspace在本地内存）
     
+内存溢出/泄漏问题定位
+
+    1.jps查看java进程，找到程序进程pid
+    2.jmap -heap pid 查看堆内存情况 
+    3.jmap ‐histo:live pid | more 查看活跃对象
+      jmap -dump:format=b,live,file=dump_xx.dat pid  将内存使用情况dump到文件中
+
 cpu占用过高问题定位
 
     1.top命令，找到占用cpu高的线程PID
@@ -95,6 +117,18 @@ cpu占用过高问题定位
                 }
             }).start();
         }  
+        
+偏向锁、轻量级锁、重量级锁
+
+    synchronized同步锁自身的优化，当没有锁竞争时，会先获取偏向锁。如果有少量竞争，偏向锁
+    会升级为轻量级锁，竞争线程会启动自旋，如果自旋到达阈值仍然没有拿到锁，就会升级为重量级锁，
+    重量级锁会让竞争线程进入阻塞状态，直到持有锁的线程执行完唤醒它们。
+    
+cas乐观锁
+
+    三个基本操作数：共享变量内存值、预期值、要修改的值
+    先获取共享变量的内存值，赋值给临时变量作为预期值，更新数据时，比对内存值和预期值
+    只有当共享变量内存值=预期值时，共享变量内存值才会更新为要修改的值
 
 springboot启动原理（自动配置原理）
 
@@ -207,3 +241,7 @@ redis缓存雪崩、缓存穿透、缓存击穿
         2.ThreadPoolExecutor.DiscardPolicy：也是丢弃任务，但是不抛出异常。
         3.ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）
         4.ThreadPoolExecutor.CallerRunsPolicy：重试添加当前的任务，自动重复调用 execute() 方法，直到成功
+        
+linux实用命令
+
+    du -sh *|sort -h   查看当前目录磁盘占用情况
