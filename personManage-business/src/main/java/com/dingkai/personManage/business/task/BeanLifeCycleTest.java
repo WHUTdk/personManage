@@ -19,7 +19,16 @@ public class BeanLifeCycleTest implements BeanNameAware, InitializingBean, Dispo
     private String beanName;
 
     public BeanLifeCycleTest() {
-        System.out.println("执行Bean构造器方法");
+        System.out.println("执行Bean构造方法");
+    }
+
+    /**
+     * 设置BeanName
+     */
+    @Override
+    public void setBeanName(String beanName) {
+        this.beanName = beanName;
+        System.out.println("beanNameAware:" + beanName);
     }
 
     @PostConstruct
@@ -27,17 +36,13 @@ public class BeanLifeCycleTest implements BeanNameAware, InitializingBean, Dispo
         System.out.println("执行postConstruct()方法");
     }
 
-    public void initMethod() {
-        System.out.println("执行Bean自定义init方法");
-    }
-
-    public void destroyMethod() {
-        System.out.println("执行Bean自定义destroy方法");
-    }
-
     @Override
     public void afterPropertiesSet() throws Exception {
         System.out.println("执行InitializingBean接口的afterPropertiesSet()方法");
+    }
+
+    public void initMethod() {
+        System.out.println("执行Bean自定义init方法");
     }
 
     @PreDestroy
@@ -50,13 +55,8 @@ public class BeanLifeCycleTest implements BeanNameAware, InitializingBean, Dispo
         System.out.println("执行DisposableBean接口的destroy()方法");
     }
 
-    /**
-     * 设置BeanName
-     */
-    @Override
-    public void setBeanName(String beanName) {
-        this.beanName = beanName;
-        System.out.println("beanNameAware:" + beanName);
+    public void destroyMethod() {
+        System.out.println("执行Bean自定义destroy方法");
     }
 
     public String getBeanName() {

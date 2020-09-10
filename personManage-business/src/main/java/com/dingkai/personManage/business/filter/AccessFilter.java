@@ -27,7 +27,6 @@ public class AccessFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        logger.info("进入过滤器中...");
         RequestWrapper requestWrapper = null;
         if (servletRequest instanceof HttpServletRequest) {
             //替换自定义包装类，解决输入流无法重复读取的问题

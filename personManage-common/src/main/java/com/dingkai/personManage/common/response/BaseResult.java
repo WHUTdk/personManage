@@ -30,7 +30,7 @@ public class BaseResult<T> {
     }
 
     public static <T> BaseResult<T> success() {
-        return new BaseResult<T>(successCode, successMsg);
+        return new BaseResult<T>(successCode, successMsg, null);
     }
 
     public static <T> BaseResult<T> success(T data) {

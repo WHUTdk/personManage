@@ -12,6 +12,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.redisson.Redisson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,12 +50,16 @@ public class SubmitLockAspect {
         RequestWrapper request = RequestHolder.getRequest();
         String ipAddress = IpUtil.getIpAddress(request);
         String lockKey = className + "." + methodName + ":" + ipAddress;
-        //key不存在 就返回true 并保存key
-        Boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, "");
-        if (success != null && success) {
-            redisTemplate.expire(lockKey, lockTime, submitLock.timeUnit());
-        } else {
-            throw new RuntimeException("请勿重复提交");
+        try {
+            //key不存在 就返回true 并保存key
+            Boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, "");
+            if (success != null && success) {
+                redisTemplate.expire(lockKey, lockTime, submitLock.timeUnit());
+            } else {
+                throw new RuntimeException("请勿重复提交");
+            }
+        } finally {
+            //redisTemplate.delete(lockKey);
         }
     }
 

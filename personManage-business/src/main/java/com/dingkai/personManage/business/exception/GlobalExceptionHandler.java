@@ -6,6 +6,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.validation.ConstraintViolationException;
+
 /**
  * @Author dingkai
  * @Date 2020/7/29 23:44
@@ -27,6 +29,12 @@ public class GlobalExceptionHandler {
         e.printStackTrace();
         FieldError fieldError = e.getBindingResult().getFieldError();
         return BaseResult.error("-1", fieldError == null ? e.getMessage() : fieldError.getDefaultMessage());
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public BaseResult handleConstraintViolationException(ConstraintViolationException e) {
+        e.printStackTrace();
+        return BaseResult.error("-1", e.getMessage());
     }
 
 }
