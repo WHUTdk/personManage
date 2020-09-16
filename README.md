@@ -67,23 +67,65 @@ jvm内存结构
     2.虚拟机栈：线程运行需要的内存空间，每个方法运行时会创建一个栈帧，保存方法参数、局部变量、返回值等信息
     3.本地方法栈:非Java代码方法运行时需要的内存空间，比如Object类的clone()、notify()、hashCode()
     4.堆：年轻代（eden区、survivor1、survivor2，内存占比8:1:1）和老年代old。
+            进入老年代条件：
+                对象经过15次Minor GC仍然存活（XX:MaxTenuringThreshold=15）
+                survivor区小于等于某个年龄的对象的总和占用空间超过survivor区的50%
+                大对象可以直接进入老年代
     5.方法区：线程共享。包括类信息（方法、字段、构造器）、运行时常量池、静态变量
             方法区是一种规范，具体实现有永久代（1.8之前，PermGen在jvm内存）和元空间（Metaspace在本地内存）
     
 内存溢出/泄漏问题定位
 
     1.jps查看java进程，找到程序进程pid
-    2.jmap -heap pid 查看堆内存情况 
+    2.jmap -heap pid 查看堆内存情况 / jinfo pid
     3.jmap ‐histo:live pid | more 查看活跃对象
       jmap -dump:format=b,live,file=dump_xx.dat pid  将内存使用情况dump到文件中
 
 cpu占用过高问题定位
 
     1.top命令，找到占用cpu高的线程PID
-    2.使用ps H -eo pid,tid,%cpu,%mem|grep pid     找到进程下的所有线程，及线程对应占用cpu情况
+    2.使用ps H -eo pid,tid,%cpu,%mem|grep pid  找到进程下的所有线程，及线程对应占用cpu、内存情况
     3.将占用cpu高的线程tid转为十六进制
     4.使用jstack pid 展示进程下所有线程详细情况，对比nid与上一步tid十六进制的值，找到占用cpu高的线程详细情况
-     
+
+jvm垃圾回收器
+
+    新生代回收器：serial
+    老年代回收器：cms(基于标记-清除算法)、serial old、parallel old(基于标记-整理算法)
+    整堆回收器： G1
+
+垃圾回收算法
+
+    1.标记-清除：标记活跃对象，清除不活跃的对象。缺点：会造成内存碎片
+    2.复制：开辟一个内存空间，将活跃的对象复制到这个空间中。缺点：消耗额外内存
+    3.标记-整理：
+    4.分代收集：
+
+判断是否垃圾对象
+
+    1.引用计数法：对象有新的引用加一，引用失效减一。此方法无法解决两个对象循环引用问题
+    2.可达性分析法：以一系列的GC Roots对象作为起始点，从起点往下搜索，整个路径成为引用链，
+        当一个对象没有和任何引用链相连时，就作为垃圾对象
+        可以作为GC Roots的对象：
+            1.虚拟机栈引用对象
+            2.本地方法栈JNI引用对象
+            3.静态属性引用对象
+            4.常量引用对象
+
+什么时候执行垃圾回收
+
+    Minor GC：Eden空间不足就进行Minor GC
+    Full GC：full GC会伴随一次minor GC
+        1.老年代不足
+        2.永久代不足（jdk1.8之后变为元空间，元空间在本地内存不在堆内存中）
+        3.Minor GC后晋升到老年代的对象大小超过老年代剩余大小
+        
+survivor为什么有两个
+
+    执行复制算法GC时，需要两个survivor区的交替移动活跃对象。
+    执行GC，eden和survivor1活跃对象复制到survivor2，然后清空survivor1和Eden，
+    下次gc时eden和survivor2活跃对象复制到survivor1，然后清空survivor2和Eden，如此反复。
+
 死锁
 
      死锁排查思路：1.找到程序运行的进程号pid；2.jstack pid查看是否有死锁
@@ -144,6 +186,26 @@ springboot启动原理（自动配置原理）
                 3.过滤，去除不合格的配置类
                 4.各个组件配置类，通过properties文件，加载配置信息
 
+springboot原生注解
+
+    @SpringBootApplication
+    @SpringbootConfiguration
+    @EnableAutoConfiguration------核心注解
+    @AutoConfigurationPackage
+    @ConfigurationProperties
+    @ServletComponentScan
+    
+springboot安全关闭
+
+springboot启动、关闭、重启命令
+
+springboot加载配置文件信息方式
+    
+    1.@Value注解
+    2.Environment类
+    3.@ConfigurationProperties注解，指定前缀
+    4.@PropertiesSource注解读取指定配置文件
+
 redis内存淘汰策略
 
     redis内存不足时，会触发内存淘汰策略，redis5.0之前只有6种淘汰策略：
@@ -165,7 +227,7 @@ redis删除机制
 redis持久化
     
     1.RDB快照
-        默认持久化策略。将数据全量备份在二进制文件中，文件名为dump.rdb。
+        默认持久化策略。将某时刻数据全量备份在二进制文件中，文件名为dump.rdb。
         可以手动修改配置文件设置持久化触发频率（m秒内有n个数据被修改）。
         RDB持久化触发方式：
             1.save：手动执行save命令，同步操作持久化，会阻塞客户端请求
@@ -197,6 +259,8 @@ redis缓存雪崩、缓存穿透、缓存击穿
         一个热点key失效，导致大量请求落在数据库上
         解决方案：热点数据不设置过期
                 互斥锁
+
+mysql回表
                 
 线程的状态
 
@@ -241,7 +305,100 @@ redis缓存雪崩、缓存穿透、缓存击穿
         2.ThreadPoolExecutor.DiscardPolicy：也是丢弃任务，但是不抛出异常。
         3.ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）
         4.ThreadPoolExecutor.CallerRunsPolicy：重试添加当前的任务，自动重复调用 execute() 方法，直到成功
+
+线程池状态
         
+    1.Running：能够接收新任务，以及能够处理已添加的任务
+    2.Shutdown：不接收新任务，但会处理已添加的任务，可调用shoutdown()方法切换到此状态
+    3.Stop：不接收新任务，也不会处理已添加的任务，并且会中断正在执行的任务，可调用shutdownNow()方法
+    4.Tidying：所有的任务终止，任务数为0，处于Tidying状态时,线程池会执行钩子函数terminated()
+    5.Terminated：线程池彻底终止
+
+微服务优缺点
+
+    优点：
+        解耦
+        业务拆分、功能拆分、易于开发
+        分布式
+    缺点：
+        通信耗时、有风险
+        部署复杂
+        分布式事务
+      
+CAP理论
+
+    C：Consistency 强一致性
+    A：Availability 可用性
+    P：Partition tolerance 分区容错性
+    CAP理论核心：一个分布式系统不可能同时很好的满足一致性、可用性和分区容错性这三个需求
+                P一定要满足
+        AP：Eureka
+        CP：Zookeeper/Consul
+
+BASE理论
+
+    Basically Available 基本可用
+    Soft State 柔性状态
+    Eventual Consistency 最终一致性
+     
+Ribbon负载规则
+    
+    1.随机
+    2.轮询：顺序选择
+    3.重试：重试选择可用的素服
+    4.最低并发：选择并发最低的服务
+    5.可用过滤：过滤一直失败或有高并发的服务
+    6.响应时间加权重：响应时间越长，权重越低；响应时间越短权重越高，被选中的概率越高
+    
+Hystrix
+
+    分布式系统服务间提供容错保护能力
+        线程池coreSize默认10个
+        信号量默认最大并发度10
+    1.服务降级 fallback
+        程序运行异常
+        运行超时
+        服务熔断触发降级
+        线程池/信号量打满触发降级
+    2.服务熔断 circuit breaker
+        熔断触发的条件：默认10秒内至少20次请求，并且有50%以上失败，就会启动熔断机制
+        熔断开启后，默认5秒后会进入半开状态，会让一个请求进行转发，如果成功，熔断器关闭，如果失败，继续开启
+    3.服务限流 flowlimit：
+    4.服务隔离
+        1.线程池隔离：使用独立的线程池对应每一个服务
+        2.信号量隔离：使用原子计数器来记录当前有多少个线程在运行。
+                    超过阈值拒绝请求；不超过的话，请求通过计数加一，请求返回计数减一
+
+hystrix常用参数
+
+consul
+    
+    和eureka区别
+        eureka：牺牲一致性，保证高可用和最终一致性。注册速度很快
+        consul：强一致性，leader挂掉后，重新选举期间整个consul不可用，牺牲了可用性。注册速度慢
+
+gateway网关
+    
+    三个核心概念：
+        路由Route
+        断言Predicate
+        过滤Filter
+        
+分布式事务
+    
+    2PC：二阶段提交协议：准备阶段(prepare)和提交阶段(commit)
+    TCC：两阶段补偿方案 try-confirm-cancel
+    最大努力通知：
+    基于mq可靠消息最终一致性：
+    saga：
+
+nginx正向代理和反向代理
+    
+    1.正向代理
+        为客户端进行代理，服务端不知道真正的客户端是谁
+    2.反向代理
+        为服务端代理，客户端不知道真正的服务端是谁
+    
 linux实用命令
 
     du -sh *|sort -h   查看当前目录磁盘占用情况
