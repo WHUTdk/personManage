@@ -1,17 +1,35 @@
 # personManage
 spring bean生命周期
 
-    1.实例化Bean对象
-    2.设置对象属性
-    3.检查是否实现Aware接口，实现Aware接口的Bean能感知自身相关属性（spring会给Bean设置相关参数比如BeanName）
-    4.执行BeanPostProcessor前置处理
-    5.检查是否实现InitializingBean接口，以决定是否调用afterPropertiesSet方法
-    6.检查是否配置自定义的init-method方法
-    7.执行BeanPostProcessor后置处理
-    8.注册必要的Destrucuion相关回调接口
-    9.使用中...
-    10.检查是否实现DisposableBean接口，执行destroy方法
-    11.检查是否配置自定义销毁方法，有的话执行
+    1.扫描类得到BeanDefinition(BeanClass、scope、dependOn、initMethodName、propertyValues...)
+    2.BeanFactoryPostProcessor(处理BeanDefinition，可以获取相关属性，并且可以设置修改BeanClass)
+    3.实例化Bean对象 new Object()
+    4.设置对象属性
+    5.检查是否实现Aware接口，实现Aware接口的Bean能感知自身相关属性（spring会给Bean设置相关参数比如BeanName）
+    6.执行BeanPostProcessor前置处理
+    7.检查是否实现InitializingBean接口，以决定是否调用afterPropertiesSet方法
+    8.检查是否配置自定义的init-method方法
+    9.执行BeanPostProcessor后置处理
+    10.注册必要的Destrucuion相关回调接口
+    11.使用中...
+    12.检查是否实现DisposableBean接口，执行destroy方法
+    13.检查是否配置自定义销毁方法，有的话执行
+
+@Import、@Component、@Bean区别
+    
+    @Component:只能用在类上，自动扫描配置Bean，spring管理生命周期，无法自定义配置第三方类
+    @Bean:显示声明和配置Bean，能够自定义创建和配置bean（自定义处理第三方类），一般和@Configuration搭配使用
+    @Import:只能用在类上，一般有下列三种用法：
+        1.生成指定类的BeanDefinition
+        2.实现ImportSelector接口，在实现方法中，生成指定Bean的BeanDefinition
+        3.实现ImportBeanDefinitionRegistrar接口，生成指定Bean的BeanDefinition
+
+BeanFactory、ApplicationContext、FactoryBean区别
+    
+    三个都是接口
+    BeanFactory:spring底层的简单接口，提供基础方法，比如getBean()
+    ApplicationContext:继承了BeanFactory和一些其他接口，spring的高级容器，对应实现的接口提供的功能更多
+    FactoryBean:生产Bean的工厂，实现该接口可自定义实例化并注册Bean到spring容器中
 
 spring循环依赖和三级缓存
 
@@ -66,7 +84,7 @@ jvm内存结构
     1.寄存器：较小的内存空间，通过计数器选取下一条要执行的字节码指令
     2.虚拟机栈：线程运行需要的内存空间，每个方法运行时会创建一个栈帧，保存方法参数、局部变量、返回值等信息
     3.本地方法栈:非Java代码方法运行时需要的内存空间，比如Object类的clone()、notify()、hashCode()
-    4.堆：年轻代（eden区、survivor1、survivor2，内存占比8:1:1）和老年代old。
+    4.堆：年轻代（eden区、survivor1、survivor2，内存占比8:1:1）和老年代old（老年代约占堆2/3）。
             进入老年代条件：
                 对象经过15次Minor GC仍然存活（XX:MaxTenuringThreshold=15）
                 survivor区小于等于某个年龄的对象的总和占用空间超过survivor区的50%
@@ -78,8 +96,9 @@ jvm内存结构
 
     1.jps查看java进程，找到程序进程pid
     2.jmap -heap pid 查看堆内存情况 / jinfo pid
-    3.jmap ‐histo:live pid | more 查看活跃对象
+    3.jmap ‐histo:live pid | more 查看活跃对象，注意：用这个命令会导致堆停止
       jmap -dump:format=b,live,file=dump_xx.dat pid  将内存使用情况dump到文件中
+    4.jvm参数中设置内存溢出转储文件，-XX:+HeapDumpOnOutOfMemoryError
 
 cpu占用过高问题定位
 
@@ -90,9 +109,9 @@ cpu占用过高问题定位
 
 jvm垃圾回收器
 
-    新生代回收器：serial
-    老年代回收器：cms(基于标记-清除算法)、serial old、parallel old(基于标记-整理算法)
-    整堆回收器： G1
+    新生代回收器：serial、Parallel Acavenge(复制算法)、parNew
+    老年代回收器：cms(基于标记-清除算法)、serial old(复制算法)、parallel old(基于标记-整理算法)
+    整堆回收器： G1、ZGC
 
 垃圾回收算法
 
@@ -260,7 +279,7 @@ redis缓存雪崩、缓存穿透、缓存击穿
         解决方案：热点数据不设置过期
                 互斥锁
 
-mysql回表
+redisson
                 
 线程的状态
 
@@ -306,6 +325,13 @@ mysql回表
         3.ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）
         4.ThreadPoolExecutor.CallerRunsPolicy：重试添加当前的任务，自动重复调用 execute() 方法，直到成功
 
+常见线程阻塞队列
+
+    1.SyncchronousQueue 无缓冲同步队列，不存储任务，上一个任务被取出后才能接收下一个任务，一般配合最大线程数为无界使用
+    2.LinkedBlockingQueue 无界阻塞队列，可以无限制添加
+    3.ArrayBlockingQueue 有界阻塞队列，初始化必须指定容量，最多只能添加指定数量的任务
+    4.PriorityBlockingQueue
+
 线程池状态
         
     1.Running：能够接收新任务，以及能够处理已添加的任务
@@ -313,7 +339,39 @@ mysql回表
     3.Stop：不接收新任务，也不会处理已添加的任务，并且会中断正在执行的任务，可调用shutdownNow()方法
     4.Tidying：所有的任务终止，任务数为0，处于Tidying状态时,线程池会执行钩子函数terminated()
     5.Terminated：线程池彻底终止
+    
+执行shutdownNow()方法后，正在运行的线程怎么实现中断的？
 
+    遍历worker集合中线程，如果正在执行的话，就执行线程的打断方法interrupt()，
+    interrupt()实际并不会立即中断正在运行的线程，而是给线程设置一个中断标识，
+    如果一个线程执行了interrupt()方法，然后再执行阻塞方法（sleep/wait/join），就会抛出异常并真正停止线程
+
+线程池底层运行原理
+
+    实现核心Worker类 Worker类实现了Runnable接口，新建Worker时会新建线程
+    提交线程任务时，线程会先提交到worker集合，提交成功后，会执行线程启动方法
+    worker大于等于核心线程数后，线程会提交到阻塞队列
+    核心代码：
+        int c = ctl.get();
+        if (workerCountOf(c) < corePoolSize) {
+            //当前线程小于核心线程数，添加新的核心线程worker
+            if (addWorker(command, true))
+                return;
+            c = ctl.get();
+        }
+        //核心线程数满了后，向队列添加worker
+        if (isRunning(c) && workQueue.offer(command)) {
+            int recheck = ctl.get();
+            if (! isRunning(recheck) && remove(command))
+                reject(command);
+            else if (workerCountOf(recheck) == 0)
+                //新增非核心线程worker
+                addWorker(null, false);
+        }
+        //添加非核心线程失败，执行拒绝策略
+        else if (!addWorker(command, false))
+            reject(command);
+    
 微服务优缺点
 
     优点：
@@ -376,6 +434,7 @@ consul
     和eureka区别
         eureka：牺牲一致性，保证高可用和最终一致性。注册速度很快
         consul：强一致性，leader挂掉后，重新选举期间整个consul不可用，牺牲了可用性。注册速度慢
+    和其他注册中心优缺点
 
 gateway网关
     
