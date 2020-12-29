@@ -1,16 +1,11 @@
 package com.dingkai.personManage.business.common.utils;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.tomcat.util.codec.binary.Base64;
 import org.springframework.util.StringUtils;
-import sun.misc.BASE64Decoder;
-import sun.misc.BASE64Encoder;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 
 /**
@@ -31,17 +26,21 @@ public class PicUtil {
     }
 
     public static String picToBase64(InputStream in) throws IOException {
-        ByteArrayOutputStream data = new ByteArrayOutputStream();
-        byte[] bytes = new byte[1024];
-        int len;
-        while ((len = in.read(bytes)) != -1) {
-            data.write(bytes, 0, len);
+        try {
+            ByteArrayOutputStream data = new ByteArrayOutputStream();
+            byte[] bytes = new byte[1024];
+            int len;
+            while ((len = in.read(bytes)) != -1) {
+                data.write(bytes, 0, len);
+            }
+            //返回Base64编码的字节数组字符串
+            return new String(Base64.encodeBase64(data.toByteArray()));
+        } finally {
+            if (in != null) {
+                // 关闭流
+                in.close();
+            }
         }
-        // 关闭流
-        in.close();
-        BASE64Encoder encoder = new BASE64Encoder();
-        //返回Base64编码的字节数组字符串
-        return encoder.encode(data.toByteArray());
     }
 
     /**
@@ -52,7 +51,8 @@ public class PicUtil {
             return;
         }
         // Base64解码，转为输入流
-        byte[] b = new BASE64Decoder().decodeBuffer(base64);
+        byte[] b = Base64.decodeBase64(base64);
+        ;
         ByteArrayInputStream bis = new ByteArrayInputStream(b);
         File file = new File(filePath);
         FileUtils.copyInputStreamToFile(bis, file);
@@ -83,9 +83,9 @@ public class PicUtil {
     public static void main(String[] args) throws IOException {
         String url1 = "http://hiphotos.qianqian.com/ting/pic/item/c83d70cf3bc79f3d98ca8e36b8a1cd11728b2988.jpg";
         String base64 = httpUrlToBase64(url1);
-        base64ToPic(base64, "C:/Users/86152/Downloads/test2.jpg");
+        base64ToPic(base64, "C:\\Users\\dingkai1\\Downloads\\test2.jpg");
         String url2 = "http://hiphotos.qianqian.com/ting/pic/item/8b13632762d0f7035cb3feda0afa513d2697c5b7.jpg";
-        httpUrlToPic(url2, "C:/Users/86152/Downloads/test.jpg");
+        httpUrlToPic(url2, "C:\\Users\\dingkai1\\Downloads\\test.jpg");
     }
 
 
