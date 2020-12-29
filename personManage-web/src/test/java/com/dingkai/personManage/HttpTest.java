@@ -1,8 +1,7 @@
 package com.dingkai.personManage;
 
 import com.alibaba.fastjson.JSONObject;
-import com.dingkai.personManage.business.utils.HttpUtil;
-import org.apache.commons.collections4.map.LinkedMap;
+import com.dingkai.personManage.business.common.utils.HttpUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

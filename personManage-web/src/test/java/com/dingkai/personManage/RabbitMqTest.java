@@ -1,6 +1,6 @@
 package com.dingkai.personManage;
 
-import com.dingkai.personManage.business.mq.RabbitMqProducer;
+import com.dingkai.personManage.business.code.mq.RabbitMqProducer;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.amqp.core.AmqpTemplate;

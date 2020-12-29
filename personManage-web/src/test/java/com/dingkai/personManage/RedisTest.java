@@ -1,7 +1,7 @@
 package com.dingkai.personManage;
 
-import com.dingkai.personManage.business.domain.PersonDO;
-import com.dingkai.personManage.business.utils.RedisUtil;
+import com.dingkai.personManage.business.code.domain.PersonDO;
+import com.dingkai.personManage.business.common.utils.RedisUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
