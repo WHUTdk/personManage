@@ -12,7 +12,7 @@ import javax.validation.constraints.Min;
  */
 @ApiModel("人员查询类")
 @Data
-public class PersonQueryVO {
+public class PersonQueryVo {
 
     @Min(value = 1, message = "pageNo不能小于1")
     private Integer pageNo = 1;

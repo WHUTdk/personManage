@@ -1,7 +1,7 @@
 package com.dingkai.personManage.business.code.service;
 
-import com.dingkai.personManage.business.code.domain.VehicleDO;
-import com.dingkai.personManage.business.code.vo.VehicleVO;
+import com.dingkai.personManage.business.code.domain.VehicleDo;
+import com.dingkai.personManage.business.code.vo.VehicleVo;
 
 import java.util.List;
 
@@ -11,15 +11,15 @@ import java.util.List;
  */
 public interface VehicleService {
 
-    void saveVehicle(VehicleVO vehicleVO) throws Exception;
+    void saveVehicle(VehicleVo vehicleVO) throws Exception;
 
     void deleteVehicleByIds(List<Integer> ids);
 
-    VehicleVO getVehicleById(Integer id) throws Exception;
+    VehicleVo getVehicleById(Integer id) throws Exception;
 
-    List<VehicleVO> getVehicleVOSByPersonId(Integer personId);
+    List<VehicleVo> getVehicleVOSByPersonId(Integer personId);
 
-    List<VehicleDO> getVehicleDOSByPersonId(Integer personId);
+    List<VehicleDo> getVehicleDOSByPersonId(Integer personId);
 
     void deleteVehicleByPersonIds(List<Integer> personIds);
 

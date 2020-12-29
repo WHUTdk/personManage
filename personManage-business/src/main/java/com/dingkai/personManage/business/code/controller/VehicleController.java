@@ -1,7 +1,7 @@
 package com.dingkai.personManage.business.code.controller;
 
 import com.dingkai.personManage.business.code.service.VehicleService;
-import com.dingkai.personManage.business.code.vo.VehicleVO;
+import com.dingkai.personManage.business.code.vo.VehicleVo;
 import com.dingkai.personManage.business.common.annotation.OperateLog;
 import com.dingkai.personManage.common.response.BaseResult;
 import io.swagger.annotations.Api;
@@ -31,7 +31,7 @@ public class VehicleController {
     @ApiOperation(value = "保存车辆信息")
     @OperateLog
     @PostMapping("/saveVehicle")
-    public BaseResult saveVehicle(@RequestBody VehicleVO vehicleVO) {
+    public BaseResult saveVehicle(@RequestBody VehicleVo vehicleVO) {
         try {
             vehicleService.saveVehicle(vehicleVO);
             return BaseResult.success();
@@ -60,7 +60,7 @@ public class VehicleController {
     @GetMapping("/getVehicleById")
     public BaseResult getVehicleById(@RequestParam("id") Integer id) {
         try {
-            VehicleVO vehicleById = vehicleService.getVehicleById(id);
+            VehicleVo vehicleById = vehicleService.getVehicleById(id);
             return BaseResult.success(vehicleById);
         } catch (Exception e) {
             logger.error("根据id查询人员信息出错，错误信息：{}", e.getMessage());

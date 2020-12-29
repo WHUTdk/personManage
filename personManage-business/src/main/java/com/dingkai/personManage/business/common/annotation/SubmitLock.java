@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SubmitLock {
 
-    long lockTime() default 2;//默认2s
+    long lockTime() default 5;//默认2s
 
     TimeUnit timeUnit() default TimeUnit.SECONDS;
 

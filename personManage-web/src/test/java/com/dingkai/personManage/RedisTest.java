@@ -1,6 +1,6 @@
 package com.dingkai.personManage;
 
-import com.dingkai.personManage.business.code.domain.PersonDO;
+import com.dingkai.personManage.business.code.domain.PersonDo;
 import com.dingkai.personManage.business.common.utils.RedisUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,14 +26,14 @@ public class RedisTest {
     public void redisTest() {
         redisUtil.set("k1", "v1");
         System.out.println(redisUtil.get("k1"));
-        PersonDO personDO = new PersonDO();
+        PersonDo personDO = new PersonDo();
         personDO.setName("丁凯");
         personDO.setIdNumber("420704199509045053");
         personDO.setSex(1);
         personDO.setHouseholdAddress("湖北省武汉市江夏区");
         personDO.setResidentialAddress("浙江省杭州市萧山区");
         redisUtil.set("dk", personDO);
-        PersonDO dk = (PersonDO) redisUtil.get("dk");
+        PersonDo dk = (PersonDo) redisUtil.get("dk");
         System.out.println(dk);
         HashMap<Object, Object> map = new HashMap<>();
         map.put("k1", "v1");

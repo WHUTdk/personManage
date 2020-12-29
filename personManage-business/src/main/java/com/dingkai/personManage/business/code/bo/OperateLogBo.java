@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * @Date 2020/7/12 23:17
  */
 @Data
-public class OperateLogBO {
+public class OperateLogBo {
 
     private String operateUsername;
 

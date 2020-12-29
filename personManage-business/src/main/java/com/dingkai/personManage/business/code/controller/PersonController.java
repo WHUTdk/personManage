@@ -1,11 +1,11 @@
 package com.dingkai.personManage.business.code.controller;
 
 import com.dingkai.personManage.business.code.service.PersonService;
-import com.dingkai.personManage.business.code.vo.PersonQueryVO;
+import com.dingkai.personManage.business.code.vo.PersonQueryVo;
 import com.dingkai.personManage.business.common.annotation.OperateLog;
 import com.dingkai.personManage.business.common.annotation.SubmitLock;
 import com.dingkai.personManage.common.response.PagedResponseVO;
-import com.dingkai.personManage.business.code.vo.PersonVO;
+import com.dingkai.personManage.business.code.vo.PersonVo;
 import com.dingkai.personManage.common.response.BaseResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -33,7 +33,7 @@ public class PersonController {
     @OperateLog
     @SubmitLock
     @PostMapping("/savePerson")
-    public BaseResult savePerson(@RequestBody PersonVO personVO) {
+    public BaseResult savePerson(@RequestBody PersonVo personVO) {
         try {
             personService.savePerson(personVO);
             return BaseResult.success();
@@ -46,9 +46,9 @@ public class PersonController {
     @ApiOperation(value = "条件查询人员信息")
     @OperateLog
     @PostMapping("/getPersonByCondition")
-    public BaseResult getPersonByCondition(@RequestBody @Validated PersonQueryVO personQueryVO) {
+    public BaseResult getPersonByCondition(@RequestBody @Validated PersonQueryVo personQueryVO) {
         try {
-            PagedResponseVO<PersonVO> personByCondition = personService.getPersonByCondition(personQueryVO);
+            PagedResponseVO<PersonVo> personByCondition = personService.getPersonByCondition(personQueryVO);
             return BaseResult.success(personByCondition);
         } catch (Exception e) {
             logger.error("条件查询人员信息出错，错误信息：{}", e.getMessage());
@@ -61,7 +61,7 @@ public class PersonController {
     @GetMapping("/getPersonById")
     public BaseResult getPersonById(@RequestParam("id") Integer id) {
         try {
-            PersonVO personById = personService.getPersonById(id);
+            PersonVo personById = personService.getPersonById(id);
             return BaseResult.success(personById);
         } catch (Exception e) {
             logger.error("根据id查询人员信息出错，错误信息：{}", e.getMessage());
@@ -86,7 +86,7 @@ public class PersonController {
     @ApiOperation(value = "条件导出人员信息")
     @OperateLog
     @PostMapping("/exportPersonByCondition")
-    public void exportPersonByCondition(@RequestBody PersonQueryVO personQueryVO, HttpServletResponse response) {
+    public void exportPersonByCondition(@RequestBody PersonQueryVo personQueryVO, HttpServletResponse response) {
         try {
             personService.exportPersonByCondition(personQueryVO, response);
         } catch (Exception e) {

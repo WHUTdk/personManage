@@ -3,7 +3,7 @@ package com.dingkai.personManage.business.code.excel.listener;
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
 import com.dingkai.personManage.business.code.dao.PersonMapper;
-import com.dingkai.personManage.business.code.domain.PersonDO;
+import com.dingkai.personManage.business.code.domain.PersonDo;
 import com.dingkai.personManage.business.code.excel.PersonImportModel;
 import com.dingkai.personManage.business.common.utils.DictionaryUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -68,7 +68,7 @@ public class PersonModelListener extends AnalysisEventListener<PersonImportModel
         for (PersonImportModel personImportModel : list) {
             try {
                 dictionaryUtil.nameToCode(personImportModel);
-                PersonDO personDO = new PersonDO();
+                PersonDo personDO = new PersonDo();
                 BeanUtils.copyProperties(personImportModel, personDO);
                 String sex = personImportModel.getSex();
                 personDO.setSex(StringUtils.isEmpty(sex) ? 0 : Integer.parseInt(sex));

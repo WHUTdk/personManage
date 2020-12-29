@@ -40,7 +40,6 @@ public class AccessFilter implements Filter {
         if (requestWrapper == null) {
             filterChain.doFilter(servletRequest, servletResponse);
         } else {
-            logger.debug("servletRequest成功替换为自定义requestWrapper");
             RequestHolder.setRequest(requestWrapper);
             filterChain.doFilter(requestWrapper, servletResponse);
         }

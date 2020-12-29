@@ -4,20 +4,20 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.dingkai.personManage.business.code.domain.VehicleDO;
+import com.dingkai.personManage.business.code.domain.VehicleDo;
 import com.dingkai.personManage.business.code.service.PersonService;
 import com.dingkai.personManage.business.code.service.VehicleService;
-import com.dingkai.personManage.business.code.vo.PersonQueryVO;
-import com.dingkai.personManage.business.code.vo.VehicleVO;
+import com.dingkai.personManage.business.code.vo.PersonQueryVo;
+import com.dingkai.personManage.business.code.vo.VehicleVo;
 import com.dingkai.personManage.business.code.dao.PersonMapper;
-import com.dingkai.personManage.business.code.domain.PersonDO;
+import com.dingkai.personManage.business.code.domain.PersonDo;
 import com.dingkai.personManage.business.code.excel.PersonImportModel;
 import com.dingkai.personManage.business.code.excel.handler.PersonWriteHandler;
 import com.dingkai.personManage.business.code.excel.PersonExportModel;
 import com.dingkai.personManage.business.common.utils.DictionaryUtil;
 import com.dingkai.personManage.business.common.utils.EasyexcelUtil;
 import com.dingkai.personManage.common.response.PagedResponseVO;
-import com.dingkai.personManage.business.code.vo.PersonVO;
+import com.dingkai.personManage.business.code.vo.PersonVo;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,8 +50,8 @@ public class PersonServiceImpl implements PersonService {
      * 保存人员信息
      */
     @Override
-    public void savePerson(PersonVO personVO) {
-        PersonDO personDO = new PersonDO();
+    public void savePerson(PersonVo personVO) {
+        PersonDo personDO = new PersonDo();
         BeanUtils.copyProperties(personVO, personDO);
         if (personDO.getId() == null) {
             //新增
@@ -66,35 +66,35 @@ public class PersonServiceImpl implements PersonService {
      * 条件查询人员信息
      */
     @Override
-    public PagedResponseVO<PersonVO> getPersonByCondition(PersonQueryVO personQueryVO) {
+    public PagedResponseVO<PersonVo> getPersonByCondition(PersonQueryVo personQueryVO) {
         Integer pageNo = personQueryVO.getPageNo();
         Integer pageSize = personQueryVO.getPageSize();
         //分页参数
-        Page<PersonDO> page = new Page<>(pageNo, pageSize);
-        QueryWrapper<PersonDO> queryWrapper = setQueryCondition(personQueryVO);
-        IPage<PersonDO> iPage = personMapper.selectPage(page, queryWrapper);
+        Page<PersonDo> page = new Page<>(pageNo, pageSize);
+        QueryWrapper<PersonDo> queryWrapper = setQueryCondition(personQueryVO);
+        IPage<PersonDo> iPage = personMapper.selectPage(page, queryWrapper);
         //属性赋值
-        ArrayList<PersonVO> personVOS = new ArrayList<>();
-        List<PersonDO> personDOS = iPage.getRecords();
-        for (PersonDO personDO : personDOS) {
-            PersonVO personVO = copyPersonDOToPersonVO(personDO);
-            personVOS.add(personVO);
+        ArrayList<PersonVo> personVos = new ArrayList<>();
+        List<PersonDo> personDos = iPage.getRecords();
+        for (PersonDo personDO : personDos) {
+            PersonVo personVO = copyPersonDOToPersonVO(personDO);
+            personVos.add(personVO);
         }
-        PagedResponseVO<PersonVO> responseVO = new PagedResponseVO<>();
+        PagedResponseVO<PersonVo> responseVO = new PagedResponseVO<>();
         responseVO.setPageNo(pageNo);
         responseVO.setPageSize(pageSize);
         responseVO.setTotal(iPage.getTotal());
         responseVO.setTotalPages(iPage.getPages());
-        responseVO.setList(personVOS);
+        responseVO.setList(personVos);
         return responseVO;
     }
 
     /**
      * 设置查询条件
      */
-    private QueryWrapper<PersonDO> setQueryCondition(PersonQueryVO personQueryVO) {
+    private QueryWrapper<PersonDo> setQueryCondition(PersonQueryVo personQueryVO) {
         //查询条件设置
-        QueryWrapper<PersonDO> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<PersonDo> queryWrapper = new QueryWrapper<>();
         String keyword = personQueryVO.getKeyword();
         if (StringUtils.isEmpty(keyword)) {
             if (StringUtils.isNotEmpty(personQueryVO.getName())) {
@@ -120,8 +120,8 @@ public class PersonServiceImpl implements PersonService {
      * 根据id查询人员信息
      */
     @Override
-    public PersonVO getPersonById(Integer id) throws Exception {
-        PersonDO personDO = personMapper.selectById(id);
+    public PersonVo getPersonById(Integer id) throws Exception {
+        PersonDo personDO = personMapper.selectById(id);
         if (personDO == null) {
             throw new Exception("根据id查询数据不存在");
         }
@@ -131,12 +131,12 @@ public class PersonServiceImpl implements PersonService {
     /**
      * DO-VO属性赋值
      */
-    private PersonVO copyPersonDOToPersonVO(PersonDO personDO) {
-        PersonVO personVO = new PersonVO();
+    private PersonVo copyPersonDOToPersonVO(PersonDo personDO) {
+        PersonVo personVO = new PersonVo();
         BeanUtils.copyProperties(personDO, personVO);
         //根据Id查询名下车辆
-        List<VehicleVO> vehicleVOS = vehicleService.getVehicleVOSByPersonId(personDO.getId());
-        personVO.setVehicleVOS(vehicleVOS);
+        List<VehicleVo> vehicleVos = vehicleService.getVehicleVOSByPersonId(personDO.getId());
+        personVO.setVehicleVos(vehicleVos);
         return personVO;
     }
 
@@ -156,15 +156,15 @@ public class PersonServiceImpl implements PersonService {
      * 根据查询条件导出人员信息excel
      */
     @Override
-    public void exportPersonByCondition(PersonQueryVO personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException {
+    public void exportPersonByCondition(PersonQueryVo personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException {
         ArrayList<PersonExportModel> personExportModels = new ArrayList<>();
         ArrayList<Integer> mergeCount = new ArrayList<>();
-        QueryWrapper<PersonDO> queryWrapper = setQueryCondition(personQueryVO);
-        List<PersonDO> personDOS = personMapper.selectList(queryWrapper);
-        for (PersonDO personDO : personDOS) {
+        QueryWrapper<PersonDo> queryWrapper = setQueryCondition(personQueryVO);
+        List<PersonDo> personDos = personMapper.selectList(queryWrapper);
+        for (PersonDo personDO : personDos) {
             //根据人员名下车辆个数动态设置合并行数
-            List<VehicleDO> vehicleDOS = vehicleService.getVehicleDOSByPersonId(personDO.getId());
-            if (CollectionUtils.isEmpty(vehicleDOS)) {
+            List<VehicleDo> vehicleDos = vehicleService.getVehicleDOSByPersonId(personDO.getId());
+            if (CollectionUtils.isEmpty(vehicleDos)) {
                 mergeCount.add(1);
                 PersonExportModel personExportModel = new PersonExportModel();
                 BeanUtils.copyProperties(personDO, personExportModel);
@@ -173,8 +173,8 @@ public class PersonServiceImpl implements PersonService {
                 personExportModels.add(personExportModel);
             } else {
                 //有多个车辆，需要合并行
-                mergeCount.add(vehicleDOS.size());
-                for (VehicleDO vehicleDO : vehicleDOS) {
+                mergeCount.add(vehicleDos.size());
+                for (VehicleDo vehicleDO : vehicleDos) {
                     PersonExportModel personExportModel = new PersonExportModel();
                     BeanUtils.copyProperties(personDO, personExportModel);
                     BeanUtils.copyProperties(vehicleDO, personExportModel);

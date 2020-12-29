@@ -11,7 +11,7 @@ import lombok.Data;
  */
 @Data
 @TableName("dictionary_info")
-public class DictionaryDO {
+public class DictionaryDo {
 
     @TableId(type = IdType.AUTO)
     private Integer id;

@@ -1,8 +1,8 @@
 package com.dingkai.personManage.business.code.service;
 
-import com.dingkai.personManage.business.code.vo.PersonQueryVO;
+import com.dingkai.personManage.business.code.vo.PersonQueryVo;
 import com.dingkai.personManage.common.response.PagedResponseVO;
-import com.dingkai.personManage.business.code.vo.PersonVO;
+import com.dingkai.personManage.business.code.vo.PersonVo;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -10,15 +10,15 @@ import java.util.List;
 
 public interface PersonService {
 
-    void savePerson(PersonVO personVO);
+    void savePerson(PersonVo personVO);
 
-    PagedResponseVO<PersonVO> getPersonByCondition(PersonQueryVO personQueryVO);
+    PagedResponseVO<PersonVo> getPersonByCondition(PersonQueryVo personQueryVO);
 
-    PersonVO getPersonById(Integer id) throws Exception;
+    PersonVo getPersonById(Integer id) throws Exception;
 
     void deletePersonByIds(List<Integer> ids);
 
-    void exportPersonByCondition(PersonQueryVO personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException;
+    void exportPersonByCondition(PersonQueryVo personQueryVO, HttpServletResponse response) throws IOException, IllegalAccessException;
 
     void downloadTemplate(HttpServletResponse response) throws IOException;
 }

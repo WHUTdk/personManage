@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @TableName("vehicle_info")
-public class VehicleDO extends Model<VehicleDO> {
+public class VehicleDo extends Model<VehicleDo> {
 
     @TableId(type = IdType.AUTO)
     private Integer id;

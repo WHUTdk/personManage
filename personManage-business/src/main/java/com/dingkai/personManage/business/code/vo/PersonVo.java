@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Data
-public class PersonVO {
+public class PersonVo {
 
     private Integer id;
 
@@ -27,6 +27,6 @@ public class PersonVO {
 
     private String householdAddress;//户籍地址
 
-    private List<VehicleVO> vehicleVOS = new ArrayList<>();
+    private List<VehicleVo> vehicleVos = new ArrayList<>();
 
 }

@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @TableName("person_info")
-public class PersonDO {
+public class PersonDo {
 
     @TableId(type = IdType.AUTO)
     private Integer id;

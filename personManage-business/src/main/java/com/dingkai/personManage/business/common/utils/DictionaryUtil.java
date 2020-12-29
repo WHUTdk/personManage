@@ -3,7 +3,7 @@ package com.dingkai.personManage.business.common.utils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dingkai.personManage.business.common.annotation.DictionaryTransfer;
 import com.dingkai.personManage.business.code.dao.DictionaryMapper;
-import com.dingkai.personManage.business.code.domain.DictionaryDO;
+import com.dingkai.personManage.business.code.domain.DictionaryDo;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,10 +64,10 @@ public class DictionaryUtil {
 
     public String getNameByGroupAndCode(String groupName, String code) {
         //一般是查询缓存
-        QueryWrapper<DictionaryDO> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<DictionaryDo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("group_name", groupName);
         queryWrapper.eq("code", code);
-        DictionaryDO dictionaryDO = dictionaryMapper.selectOne(queryWrapper);
+        DictionaryDo dictionaryDO = dictionaryMapper.selectOne(queryWrapper);
         if (dictionaryDO == null || StringUtils.isEmpty(dictionaryDO.getName())) {
             logger.error("根据groupName：{}和code：{}获取到的name为空", groupName, code);
             return null;
@@ -77,10 +77,10 @@ public class DictionaryUtil {
 
     public String getCodeByGroupAndName(String groupName, String name) {
         //一般是查询缓存
-        QueryWrapper<DictionaryDO> queryWrapper = new QueryWrapper<>();
+        QueryWrapper<DictionaryDo> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("group_name", groupName);
         queryWrapper.eq("name", name);
-        DictionaryDO dictionaryDO = dictionaryMapper.selectOne(queryWrapper);
+        DictionaryDo dictionaryDO = dictionaryMapper.selectOne(queryWrapper);
         if (dictionaryDO == null || StringUtils.isEmpty(dictionaryDO.getCode())) {
             logger.error("根据groupName：{}和name：{}获取到的code为空", groupName, name);
             return null;
@@ -90,9 +90,9 @@ public class DictionaryUtil {
 
     public List<String> getNameListByGroup(String groupName) {
         ArrayList<String> list = new ArrayList<>();
-        List<DictionaryDO> DictionaryDOS = dictionaryMapper.selectList(
-                new QueryWrapper<DictionaryDO>().eq("group_name", groupName));
-        for (DictionaryDO dictionaryDO : DictionaryDOS) {
+        List<DictionaryDo> dictionaryDos = dictionaryMapper.selectList(
+                new QueryWrapper<DictionaryDo>().eq("group_name", groupName));
+        for (DictionaryDo dictionaryDO : dictionaryDos) {
             list.add(dictionaryDO.getName());
         }
         return list;

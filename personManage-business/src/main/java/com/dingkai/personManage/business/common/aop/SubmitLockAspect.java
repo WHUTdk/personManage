@@ -5,6 +5,7 @@ import com.dingkai.personManage.business.common.config.RequestHolder;
 import com.dingkai.personManage.business.common.filter.RequestWrapper;
 import com.dingkai.personManage.business.common.utils.IpUtil;
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
@@ -33,29 +34,31 @@ public class SubmitLockAspect {
     }
 
     @Before("pointCut()")
-    public void around(JoinPoint joinPoint) {
+    public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         String methodName = methodSignature.getName();
         String className = methodSignature.getDeclaringTypeName();
         SubmitLock submitLock = methodSignature.getMethod().getAnnotation(SubmitLock.class);
         long lockTime = submitLock.lockTime();
         if (lockTime <= 0) {
-            lockTime = 2;
+            lockTime = 5;
         }
         RequestWrapper request = RequestHolder.getRequest();
         String ipAddress = IpUtil.getIpAddress(request);
         String lockKey = className + "." + methodName + ":" + ipAddress;
-        try {
-            //key不存在 就返回true 并保存key
-            Boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, "");
-            if (success != null && success) {
+        //key不存在 就返回true 并保存key
+        Boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, "");
+        if (success != null && success) {
+            try {
                 redisTemplate.expire(lockKey, lockTime, submitLock.timeUnit());
-            } else {
-                throw new RuntimeException("请勿重复提交");
+                return joinPoint.proceed();
+            } finally {
+                redisTemplate.delete(lockKey);
             }
-        } finally {
-            //redisTemplate.delete(lockKey);
+        } else {
+            throw new RuntimeException("请勿重复提交");
         }
+
     }
 
 }

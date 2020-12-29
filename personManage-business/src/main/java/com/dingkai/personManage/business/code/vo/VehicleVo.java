@@ -7,7 +7,7 @@ import lombok.Data;
  * @Date 2020/7/17 23:54
  */
 @Data
-public class VehicleVO {
+public class VehicleVo {
 
     private Integer id;
 
