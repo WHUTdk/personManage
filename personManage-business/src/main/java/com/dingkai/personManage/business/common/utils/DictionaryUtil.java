@@ -3,7 +3,7 @@ package com.dingkai.personManage.business.common.utils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dingkai.personManage.business.common.annotation.DictionaryTransfer;
 import com.dingkai.personManage.business.code.dao.DictionaryMapper;
-import com.dingkai.personManage.business.code.domain.DictionaryDo;
+import com.dingkai.personManage.business.code.entity.DictionaryDo;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

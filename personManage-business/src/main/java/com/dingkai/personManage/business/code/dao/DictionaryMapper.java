@@ -1,7 +1,7 @@
 package com.dingkai.personManage.business.code.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.dingkai.personManage.business.code.domain.DictionaryDo;
+import com.dingkai.personManage.business.code.entity.DictionaryDo;
 
 /**
  * @Author dingkai

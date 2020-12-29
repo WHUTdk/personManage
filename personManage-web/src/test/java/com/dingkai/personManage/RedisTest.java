@@ -1,6 +1,6 @@
 package com.dingkai.personManage;
 
-import com.dingkai.personManage.business.code.domain.PersonDo;
+import com.dingkai.personManage.business.code.person.entity.PersonDo;
 import com.dingkai.personManage.business.common.utils.RedisUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
