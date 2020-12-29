@@ -1,4 +1,4 @@
-package com.dingkai.personManage.business.common.utils;
+package com.dingkai.personManage.common.utils;
 
 import org.apache.commons.lang3.time.DateUtils;
 

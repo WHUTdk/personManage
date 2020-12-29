@@ -1,4 +1,4 @@
-package com.dingkai.personManage.business.common.utils;
+package com.dingkai.personManage.common.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;

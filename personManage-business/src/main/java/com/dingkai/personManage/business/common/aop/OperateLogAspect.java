@@ -4,7 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.dingkai.personManage.business.code.bo.OperateLogBo;
 import com.dingkai.personManage.business.common.config.RequestHolder;
 import com.dingkai.personManage.business.common.filter.RequestWrapper;
-import com.dingkai.personManage.business.common.utils.IpUtil;
+import com.dingkai.personManage.common.utils.IpUtil;
 import com.dingkai.personManage.common.response.BaseResult;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

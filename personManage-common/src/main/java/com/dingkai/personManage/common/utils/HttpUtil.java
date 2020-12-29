@@ -1,4 +1,4 @@
-package com.dingkai.personManage.business.common.utils;
+package com.dingkai.personManage.common.utils;
 
 import com.alibaba.fastjson.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;

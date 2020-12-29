@@ -1,4 +1,4 @@
-package com.dingkai.personManage.business.common.utils;
+package com.dingkai.personManage.common.utils;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
@@ -38,6 +38,7 @@ public class QRCodeUtil {
 
     public static void main(String[] args) throws IOException, WriterException {
         generateQRCodeImage("http://47.99.187.36:8080/images/%E9%B2%AE%E9%B2%A42020Q4%E5%9B%A2%E5%BB%BA.jpg", 1280, 1280, "C:\\Users\\dingkai1\\Downloads" + "\\QrCode.png");
+
     }
 
 }

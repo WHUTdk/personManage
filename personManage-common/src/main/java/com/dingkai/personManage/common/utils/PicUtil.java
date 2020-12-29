@@ -1,4 +1,4 @@
-package com.dingkai.personManage.business.common.utils;
+package com.dingkai.personManage.common.utils;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.tomcat.util.codec.binary.Base64;

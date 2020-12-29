@@ -1,4 +1,4 @@
-package com.dingkai.personManage.business.common.utils;
+package com.dingkai.personManage.common.utils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
