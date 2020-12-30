@@ -2,9 +2,11 @@ package com.dingkai.personManage.common.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -160,6 +162,22 @@ public class RedisUtil {
      */
     public Map<Object, Object> hmGet(String key) {
         return redisTemplate.opsForHash().entries(key);
+    }
+
+    /**
+     * 获取分布式锁
+     */
+    public boolean getDistributedLock(String lockKey, String value, long lockTime, TimeUnit timeUnit) {
+        return redisTemplate.opsForValue().setIfAbsent(lockKey, value, lockTime, timeUnit);
+    }
+
+    /**
+     * lua脚本安全释放锁
+     */
+    public void safeUnLock(String key, String value) {
+        String luaScript = "local in = ARGV[1] local curr=redis.call('get', KEYS[1]) if in==curr then redis.call('del', KEYS[1]) end return 'OK'";
+        RedisScript<String> redisScript = RedisScript.of(luaScript);
+        redisTemplate.execute(redisScript, Collections.singletonList(key), Collections.singleton(value));
     }
 
 

@@ -4,6 +4,7 @@ import com.dingkai.personManage.business.common.annotation.SubmitLock;
 import com.dingkai.personManage.business.common.config.RequestHolder;
 import com.dingkai.personManage.business.common.filter.RequestWrapper;
 import com.dingkai.personManage.common.utils.IpUtil;
+import com.dingkai.personManage.common.utils.RedisUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -14,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 /**
  * @Author dingkai
@@ -27,6 +30,9 @@ public class SubmitLockAspect {
 
     @Autowired
     private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private RedisUtil redisUtil;
 
     @Pointcut("@annotation(com.dingkai.personManage.business.common.annotation.SubmitLock)")
     public void pointCut() {
@@ -46,16 +52,17 @@ public class SubmitLockAspect {
         String ipAddress = IpUtil.getIpAddress(request);
         String lockKey = className + "." + methodName + ":" + ipAddress;
         //key不存在 就返回true 并保存key
-        Boolean success = redisTemplate.opsForValue().setIfAbsent(lockKey, "");
-        if (success != null && success) {
-            try {
-                redisTemplate.expire(lockKey, lockTime, submitLock.timeUnit());
+        String uniqueValue = UUID.randomUUID().toString();
+        try {
+            boolean lockFlag = redisUtil.getDistributedLock(lockKey, uniqueValue, lockTime, submitLock.timeUnit());
+            if (lockFlag) {
                 return joinPoint.proceed();
-            } finally {
-                redisTemplate.delete(lockKey);
+            } else {
+                throw new RuntimeException("请勿重复提交");
             }
-        } else {
-            throw new RuntimeException("请勿重复提交");
+        } finally {
+            // value相同时才能删除成功
+            redisUtil.safeUnLock(lockKey, uniqueValue);
         }
 
     }

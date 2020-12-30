@@ -5,7 +5,6 @@ import com.dingkai.personManage.common.response.BaseResult;
 import com.dingkai.personManage.security.dao.UserMapper;
 import com.dingkai.personManage.security.domain.UserDO;
 import com.dingkai.personManage.security.vo.UserVO;
-import com.mysql.jdbc.exceptions.jdbc4.MySQLIntegrityConstraintViolationException;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
