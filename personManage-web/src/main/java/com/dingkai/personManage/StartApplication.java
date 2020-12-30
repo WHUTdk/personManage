@@ -8,8 +8,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication(scanBasePackages = {"com.dingkai.personManage"})
-@MapperScan(basePackages = {"com.dingkai.personManage.*.dao"})
-@ServletComponentScan(basePackages="com.dingkai.personManage.*.filter")
+@MapperScan(basePackages = {"com.dingkai.personManage.**.dao"})
+@ServletComponentScan(basePackages="com.dingkai.personManage")
 @EnableAsync
 public class StartApplication {
 

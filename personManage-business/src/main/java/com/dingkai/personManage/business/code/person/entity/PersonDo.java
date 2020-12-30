@@ -31,6 +31,10 @@ public class PersonDo {
 
     private String householdAddress;//户籍地址
 
+    private String mixQuery;//关键字查询字段
+
+    private String firstLetterSort;//姓名首字母缩写
+
     @TableField(value = "create_time",fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 

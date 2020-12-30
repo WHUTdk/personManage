@@ -1,7 +1,9 @@
 package com.dingkai.personManage.business.code.vehicle.controller;
 
+import com.dingkai.personManage.business.code.person.vo.resp.SelPersonRespVo;
 import com.dingkai.personManage.business.code.vehicle.service.VehicleService;
 import com.dingkai.personManage.business.code.vehicle.vo.VehicleVo;
+import com.dingkai.personManage.business.code.vehicle.vo.req.SaveVehicleReqVo;
 import com.dingkai.personManage.business.common.annotation.OperateLog;
 import com.dingkai.personManage.common.response.BaseResult;
 import io.swagger.annotations.Api;
@@ -31,12 +33,12 @@ public class VehicleController {
     @ApiOperation(value = "保存车辆信息")
     @OperateLog
     @PostMapping("/saveVehicle")
-    public BaseResult saveVehicle(@RequestBody VehicleVo vehicleVO) {
+    public BaseResult saveVehicle(@RequestBody SaveVehicleReqVo saveVehicleReqVo) {
         try {
-            vehicleService.saveVehicle(vehicleVO);
+            vehicleService.saveVehicle(saveVehicleReqVo);
             return BaseResult.success();
         } catch (Exception e) {
-            logger.error("保存车辆信息出错，错误信息：{}", e.getMessage());
+            logger.error("保存车辆信息出错", e);
             return BaseResult.error("-1", e.getMessage());
         }
     }
@@ -44,13 +46,12 @@ public class VehicleController {
     @ApiOperation(value = "根据id集合删除车辆信息")
     @OperateLog
     @PostMapping("/deleteVehicleByIds")
-    public BaseResult deleteVehicleByIds(@RequestBody Map<String, List<Integer>> map) {
+    public BaseResult deleteVehicleByIds(@RequestBody List<Integer> ids) {
         try {
-            List<Integer> ids = map.get("ids");
             vehicleService.deleteVehicleByIds(ids);
             return BaseResult.success();
         } catch (Exception e) {
-            logger.error("根据id删除车辆信息出错，错误信息：{}", e.getMessage());
+            logger.error("根据id删除车辆信息出错", e);
             return BaseResult.error("-1", e.getMessage());
         }
     }
@@ -60,10 +61,10 @@ public class VehicleController {
     @GetMapping("/getVehicleById")
     public BaseResult getVehicleById(@RequestParam("id") Integer id) {
         try {
-            VehicleVo vehicleById = vehicleService.getVehicleById(id);
+            SelPersonRespVo vehicleById = vehicleService.getVehicleById(id);
             return BaseResult.success(vehicleById);
         } catch (Exception e) {
-            logger.error("根据id查询人员信息出错，错误信息：{}", e.getMessage());
+            logger.error("根据id查询人员信息出错", e);
             return BaseResult.error("-1", e.getMessage());
         }
     }

@@ -88,6 +88,7 @@
             <artifactId>easyexcel</artifactId>
             <version>2.2.6</version>
         </dependency>
+        <!-- swagger2 -->
         <dependency>
             <groupId>io.springfox</groupId>
             <artifactId>springfox-swagger2</artifactId>
@@ -99,7 +100,7 @@
             <version>2.9.2</version>
         </dependency>
 
-        <!--rabbitmq-->
+        <!-- rabbitmq -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
@@ -109,6 +110,12 @@
             <groupId>org.redisson</groupId>
             <artifactId>redisson</artifactId>
             <version>3.13.0</version>
+        </dependency>
+        <!-- pinyin4j -->
+        <dependency>
+            <groupId>com.belerweb</groupId>
+            <artifactId>pinyin4j</artifactId>
+            <version>2.5.1</version>
         </dependency>
     </dependencies>
 </project>

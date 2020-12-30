@@ -1,7 +1,9 @@
 package com.dingkai.personManage.business.code.vehicle.service;
 
+import com.dingkai.personManage.business.code.person.vo.resp.SelPersonRespVo;
 import com.dingkai.personManage.business.code.vehicle.entity.VehicleDo;
 import com.dingkai.personManage.business.code.vehicle.vo.VehicleVo;
+import com.dingkai.personManage.business.code.vehicle.vo.req.SaveVehicleReqVo;
 
 import java.util.List;
 
@@ -11,13 +13,13 @@ import java.util.List;
  */
 public interface VehicleService {
 
-    void saveVehicle(VehicleVo vehicleVO) throws Exception;
+    void saveVehicle(SaveVehicleReqVo vehicleVO) throws Exception;
 
     void deleteVehicleByIds(List<Integer> ids);
 
-    VehicleVo getVehicleById(Integer id) throws Exception;
+    SelPersonRespVo getVehicleById(Integer id) throws Exception;
 
-    List<VehicleVo> getVehicleVOSByPersonId(Integer personId);
+    List<SelPersonRespVo> getVehicleVOSByPersonId(Integer personId);
 
     List<VehicleDo> getVehicleDOSByPersonId(Integer personId);
 

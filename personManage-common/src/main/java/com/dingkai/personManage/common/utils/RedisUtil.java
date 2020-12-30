@@ -17,6 +17,11 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class RedisUtil {
 
+    /**
+     * 释放锁成功返回值
+     */
+    private static final Long RELEASE_LOCK_SUCCESS = 1L;
+
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -167,17 +172,18 @@ public class RedisUtil {
     /**
      * 获取分布式锁
      */
-    public boolean getDistributedLock(String lockKey, String value, long lockTime, TimeUnit timeUnit) {
-        return redisTemplate.opsForValue().setIfAbsent(lockKey, value, lockTime, timeUnit);
+    public boolean getDistributedLock(String lockKey, String requestId, long lockTime, TimeUnit timeUnit) {
+        return redisTemplate.opsForValue().setIfAbsent(lockKey, requestId, lockTime, timeUnit);
     }
 
     /**
      * lua脚本安全释放锁
      */
-    public void safeUnLock(String key, String value) {
-        String luaScript = "local in = ARGV[1] local curr=redis.call('get', KEYS[1]) if in==curr then redis.call('del', KEYS[1]) end return 'OK'";
-        RedisScript<String> redisScript = RedisScript.of(luaScript);
-        redisTemplate.execute(redisScript, Collections.singletonList(key), Collections.singleton(value));
+    public boolean safeUnLock(String key, String requestId) {
+        String luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+        RedisScript<Long> redisScript = RedisScript.of(luaScript, Long.class);
+        Long result = redisTemplate.execute(redisScript, Collections.singletonList(key), Collections.singleton(requestId));
+        return RELEASE_LOCK_SUCCESS.equals(result);
     }
 
 

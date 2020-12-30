@@ -1,11 +1,12 @@
 package com.dingkai.personManage.business.code.person.controller;
 
 import com.dingkai.personManage.business.code.person.service.PersonService;
-import com.dingkai.personManage.business.code.person.vo.req.PersonQueryReqVo;
+import com.dingkai.personManage.business.code.person.vo.req.SavePersonReqVo;
+import com.dingkai.personManage.business.code.person.vo.req.SelPersonReqVo;
+import com.dingkai.personManage.business.code.person.vo.resp.SelPersonRespVo;
 import com.dingkai.personManage.business.common.annotation.OperateLog;
 import com.dingkai.personManage.business.common.annotation.SubmitLock;
 import com.dingkai.personManage.common.response.PagedResponseVO;
-import com.dingkai.personManage.business.code.person.vo.PersonVo;
 import com.dingkai.personManage.common.response.BaseResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -33,12 +34,12 @@ public class PersonController {
     @OperateLog
     @SubmitLock
     @PostMapping("/savePerson")
-    public BaseResult savePerson(@RequestBody PersonVo personVO) {
+    public BaseResult savePerson(@RequestBody SavePersonReqVo savePersonReqVo) {
         try {
-            personService.savePerson(personVO);
+            personService.savePerson(savePersonReqVo);
             return BaseResult.success();
         } catch (Exception e) {
-            logger.error("保存人员信息出错，错误信息：{}", e.getMessage());
+            logger.error("保存人员信息出错", e);
             return BaseResult.error("-1", e.getMessage());
         }
     }
@@ -46,12 +47,12 @@ public class PersonController {
     @ApiOperation(value = "条件查询人员信息")
     @OperateLog
     @PostMapping("/getPersonByCondition")
-    public BaseResult getPersonByCondition(@RequestBody @Validated PersonQueryReqVo personQueryReqVO) {
+    public BaseResult getPersonByCondition(@RequestBody @Validated SelPersonReqVo selPersonReqVO) {
         try {
-            PagedResponseVO<PersonVo> personByCondition = personService.getPersonByCondition(personQueryReqVO);
+            PagedResponseVO<SelPersonRespVo> personByCondition = personService.getPersonByCondition(selPersonReqVO);
             return BaseResult.success(personByCondition);
         } catch (Exception e) {
-            logger.error("条件查询人员信息出错，错误信息：{}", e.getMessage());
+            logger.error("条件查询人员信息出错", e);
             return BaseResult.error("-1", e.getMessage());
         }
     }
@@ -61,10 +62,10 @@ public class PersonController {
     @GetMapping("/getPersonById")
     public BaseResult getPersonById(@RequestParam("id") Integer id) {
         try {
-            PersonVo personById = personService.getPersonById(id);
+            SelPersonRespVo personById = personService.getPersonById(id);
             return BaseResult.success(personById);
         } catch (Exception e) {
-            logger.error("根据id查询人员信息出错，错误信息：{}", e.getMessage());
+            logger.error("根据id查询人员信息出错", e);
             return BaseResult.error("-1", e.getMessage());
         }
     }
@@ -72,13 +73,12 @@ public class PersonController {
     @ApiOperation(value = "根据id集合删除人员信息")
     @OperateLog
     @PostMapping("/deletePersonByIds")
-    public BaseResult deletePersonByIds(@RequestBody Map<String, List<Integer>> map) {
+    public BaseResult deletePersonByIds(@RequestBody List<Integer> ids) {
         try {
-            List<Integer> ids = map.get("ids");
             personService.deletePersonByIds(ids);
             return BaseResult.success();
         } catch (Exception e) {
-            logger.error("根据id删除人员信息出错，错误信息：{}", e.getMessage());
+            logger.error("根据id删除人员信息出错", e);
             return BaseResult.error("-1", e.getMessage());
         }
     }
@@ -86,11 +86,11 @@ public class PersonController {
     @ApiOperation(value = "条件导出人员信息")
     @OperateLog
     @PostMapping("/exportPersonByCondition")
-    public void exportPersonByCondition(@RequestBody PersonQueryReqVo personQueryReqVO, HttpServletResponse response) {
+    public void exportPersonByCondition(@RequestBody SelPersonReqVo selPersonReqVO, HttpServletResponse response) {
         try {
-            personService.exportPersonByCondition(personQueryReqVO, response);
+            personService.exportPersonByCondition(selPersonReqVO, response);
         } catch (Exception e) {
-            logger.error("条件导出人员信息出错，错误信息：{}", e.getMessage());
+            logger.error("条件导出人员信息出错", e);
         }
     }
 
@@ -101,7 +101,7 @@ public class PersonController {
         try {
             personService.downloadTemplate(response);
         } catch (Exception e) {
-            logger.error("下载人员导入模板出错，错误信息：{}", e.getMessage());
+            logger.error("下载人员导入模板出错", e);
         }
     }
 

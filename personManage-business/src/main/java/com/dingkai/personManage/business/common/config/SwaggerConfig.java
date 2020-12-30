@@ -19,6 +19,7 @@ import java.util.List;
 /**
  * @Author dingkai
  * @Date 2020/8/3 21:52
+ *  http://localhost:8001/swagger-ui.html
  */
 @Configuration
 @EnableSwagger2

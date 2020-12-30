@@ -6,6 +6,7 @@ import com.dingkai.personManage.business.common.filter.RequestWrapper;
 import com.dingkai.personManage.common.utils.IpUtil;
 import com.dingkai.personManage.common.utils.RedisUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
@@ -38,7 +39,7 @@ public class SubmitLockAspect {
     public void pointCut() {
     }
 
-    @Before("pointCut()")
+    @Around("pointCut()")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         String methodName = methodSignature.getName();
@@ -51,10 +52,10 @@ public class SubmitLockAspect {
         RequestWrapper request = RequestHolder.getRequest();
         String ipAddress = IpUtil.getIpAddress(request);
         String lockKey = className + "." + methodName + ":" + ipAddress;
-        //key不存在 就返回true 并保存key
-        String uniqueValue = UUID.randomUUID().toString();
+        //释放锁时，校验value
+        String requestId = UUID.randomUUID().toString();
         try {
-            boolean lockFlag = redisUtil.getDistributedLock(lockKey, uniqueValue, lockTime, submitLock.timeUnit());
+            boolean lockFlag = redisUtil.getDistributedLock(lockKey, requestId, lockTime, submitLock.timeUnit());
             if (lockFlag) {
                 return joinPoint.proceed();
             } else {
@@ -62,7 +63,7 @@ public class SubmitLockAspect {
             }
         } finally {
             // value相同时才能删除成功
-            redisUtil.safeUnLock(lockKey, uniqueValue);
+            redisUtil.safeUnLock(lockKey, requestId);
         }
 
     }

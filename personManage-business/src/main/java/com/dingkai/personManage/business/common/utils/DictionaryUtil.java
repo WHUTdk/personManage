@@ -2,8 +2,8 @@ package com.dingkai.personManage.business.common.utils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dingkai.personManage.business.common.annotation.DictionaryTransfer;
-import com.dingkai.personManage.business.code.dao.DictionaryMapper;
-import com.dingkai.personManage.business.code.entity.DictionaryDo;
+import com.dingkai.personManage.business.code.dictionary.dao.DictionaryMapper;
+import com.dingkai.personManage.business.code.dictionary.entity.DictionaryDo;
 import com.dingkai.personManage.common.utils.BeanUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
