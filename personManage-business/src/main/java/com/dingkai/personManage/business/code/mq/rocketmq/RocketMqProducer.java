@@ -1,5 +1,6 @@
 package com.dingkai.personManage.business.code.mq.rocketmq;
 
+import com.dingkai.personManage.common.utils.JsonUtil;
 import org.apache.rocketmq.client.exception.MQBrokerException;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
@@ -40,7 +41,7 @@ public class RocketMqProducer {
             message.setBody("hello4".getBytes());
             message.setKeys(orderId);
             SendResult send = rocketMQProducer.send(message);
-            System.out.println(send);
+            System.out.println(JsonUtil.toJsonString(send));
         } catch (Exception e) {
             e.printStackTrace();
         }

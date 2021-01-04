@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
@@ -51,6 +52,7 @@ public class PersonServiceImpl implements PersonService {
     /**
      * 保存人员信息
      */
+    @Transactional
     @Override
     public void savePerson(SavePersonReqVo personVO) {
         PersonDo personDO = new PersonDo();
@@ -149,6 +151,7 @@ public class PersonServiceImpl implements PersonService {
     /**
      * 根据id集合删除人员信息
      */
+    @Transactional
     @Override
     public void deletePersonByIds(List<Integer> ids) {
         if (CollectionUtils.isNotEmpty(ids)) {
