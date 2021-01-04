@@ -19,9 +19,6 @@ public class RabbitMqTest {
     @Autowired
     private RabbitMqProducer rabbitMqProducer;
 
-    @Autowired
-    private AmqpTemplate rabbitMqTemplate;
-
     @Test
     public void producerTest() throws InterruptedException {
         rabbitMqProducer.sendMessage();
