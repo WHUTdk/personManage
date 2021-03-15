@@ -116,6 +116,11 @@ public class MessageUtil {
      */
     public static final String EVENT_TYPE_VIEW = "VIEW";
 
+    /**
+     * 事件类型：LOCATION(自定义菜单发送地理位置)
+     */
+    public static final String EVENT_TYPE_LOCATION = "LOCATION";
+
     public static final String EVENT_NAME = "Event";
 	public static final String EVENT_KEY = "EventKey";
 	public static final String Encrypt = "Encrypt";

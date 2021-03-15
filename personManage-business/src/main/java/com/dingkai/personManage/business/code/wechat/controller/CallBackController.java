@@ -72,7 +72,7 @@ public class CallBackController {
     private String doPost(HttpServletRequest request) {
         try {
             Map<String, String> reqMap = MessageUtil.parseXml(request);
-            logger.info("微信post回调数据：{}", JsonUtil.toJsonString(reqMap));
+            logger.info("微信post回调请求数据：{}", JsonUtil.toJsonString(reqMap));
             String msgType = reqMap.get(MessageUtil.MSG_TYPE);
             //根据不通消息类型，分别处理消息
             WechatMsgTypeEnum msgTypeEnum = WechatMsgTypeEnum.getByType(msgType);

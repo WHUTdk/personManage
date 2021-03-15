@@ -13,4 +13,8 @@ public class WechatUrlConstant {
 
     public static final String uploadUrl="https://api.weixin.qq.com/cgi-bin/media/upload?access_token=#{accessToken}&type=#{type}";
 
+    public static final String tempQrCodeCreateUrl="https://api.weixin.qq.com/cgi-bin/qrcode/create?access_token=#{accessToken}";
+
+    public static final String tempQrCodeShowUrl="https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=#{ticket}";
+
 }

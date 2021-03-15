@@ -1,13 +1,12 @@
 package com.dingkai.personManage.business.code.wechat.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.dingkai.personManage.business.code.wechat.constants.WechatUrlConstant;
 import com.dingkai.personManage.business.code.wechat.dto.ImageRespMsg;
 import com.dingkai.personManage.business.code.wechat.dto.TextRespMsg;
 import com.dingkai.personManage.business.code.wechat.enums.WechatEventKeyEnum;
 import com.dingkai.personManage.business.code.wechat.service.WechatMsgService;
-import com.dingkai.personManage.business.code.wechat.service.WechatQueryService;
+import com.dingkai.personManage.business.code.wechat.service.WechatService;
 import com.dingkai.personManage.business.code.wechat.utils.MessageUtil;
 import com.dingkai.personManage.business.code.wechat.utils.WechatUploadUtil;
 import com.dingkai.personManage.common.utils.HttpUtil;
@@ -32,7 +31,7 @@ public class EventMsgService extends WechatMsgService {
     @Autowired
     private HttpUtil httpUtil;
     @Autowired
-    private WechatQueryService queryService;
+    private WechatService wechatService;
 
     @Override
     public String handleMsg(Map<String, String> reqMap) {
@@ -53,6 +52,9 @@ public class EventMsgService extends WechatMsgService {
                 break;
             case MessageUtil.EVENT_TYPE_SCAN:
                 respMsg = scanEvent(reqMap);
+                break;
+            case MessageUtil.EVENT_TYPE_LOCATION:
+                respMsg = locationEvent(reqMap);
                 break;
             default:
                 logger.info("未知的推送事件类型，不处理，event：{}", event);
@@ -110,7 +112,7 @@ public class EventMsgService extends WechatMsgService {
                 ImageRespMsg imageRespMsg = new ImageRespMsg();
                 imageRespMsg.setBaseResp(reqMap, MessageUtil.RESP_MESSAGE_TYPE_IMAGE);
                 ImageRespMsg.Image image = new ImageRespMsg.Image();
-                String url = WechatUrlConstant.uploadUrl.replace("#{accessToken}", queryService.getAccessToken()).replace("#{type}", "image");
+                String url = WechatUrlConstant.uploadUrl.replace("#{accessToken}", wechatService.getAccessToken()).replace("#{type}", "image");
                 String result = httpUtil.uploadFile(url, WechatUploadUtil.getParams("/opt/images/鲮鲤2020Q4团建.jpg", "image"));
                 logger.info("调用微信上传素材接口，返回结果：{}", result);
                 String mediaId = "";
@@ -135,5 +137,19 @@ public class EventMsgService extends WechatMsgService {
      */
     private String viewEvent(Map<String, String> reqMap) {
         return null;
+    }
+
+    /**
+     * 发送地理位置事件
+     */
+    private String locationEvent(Map<String, String> reqMap) {
+        String latitude = reqMap.get("Latitude");
+        String longitude = reqMap.get("Longitude");
+        String precision = reqMap.get("Precision");
+        TextRespMsg textRespMsg = new TextRespMsg();
+        textRespMsg.setBaseResp(reqMap, MessageUtil.RESP_MESSAGE_TYPE_TEXT);
+        String content = "发送定位的具体信息：\n纬度：" + latitude + "\n" + "经度：" + longitude;
+        textRespMsg.setContent(content);
+        return MessageUtil.textMessageToXml(textRespMsg);
     }
 }
