@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 @RocketMQMessageListener(
         topic = "dingkai1_test",
         consumerGroup = "dingkai1_consumer_group_1",
-        consumeMode = ConsumeMode.CONCURRENTLY
+        consumeMode = ConsumeMode.ORDERLY
 )
 public class RocketMqConsumer1 implements RocketMQListener<MessageExt> {
 

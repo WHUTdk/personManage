@@ -29,7 +29,7 @@ public class RocketMqConsumer2 {
     @Value("${rocketmq.name-server}")
     private String nameServer;
 
-    @PostConstruct
+    //@PostConstruct
     public void initRocketMq() {
         createRocketMQConsumer("dingkai1_test", "dingkai1_consumer_group_1");
     }
