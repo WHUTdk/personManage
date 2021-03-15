@@ -61,12 +61,13 @@ public class WechatService {
             accessToken = jsonObject.getString("access_token");
             //凭证有效时间，单位：秒
             Integer expire = jsonObject.getInteger("expires_in");
-            if (expire == null) {
-                expire = 7200;
+            if (expire != null) {
+                //提前5min过期
+                expire -= 5 * 60;
+                if (expire >= 0) {
+                    redisUtil.set(redisKey, accessToken, expire);
+                }
             }
-            //提前10min过期
-            expire -= 10 * 60;
-            redisUtil.set(redisKey, accessToken, expire);
         }
         return accessToken;
     }

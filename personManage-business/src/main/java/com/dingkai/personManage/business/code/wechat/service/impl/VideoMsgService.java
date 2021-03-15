@@ -1,6 +1,7 @@
 package com.dingkai.personManage.business.code.wechat.service.impl;
 
 import com.dingkai.personManage.business.code.wechat.service.WechatMsgService;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
@@ -9,6 +10,7 @@ import java.util.Map;
  * @desc
  * @date 2021/3/12 14:41
  */
+@Service
 public class VideoMsgService extends WechatMsgService {
 
     @Override
