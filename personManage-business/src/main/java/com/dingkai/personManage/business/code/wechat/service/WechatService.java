@@ -130,10 +130,17 @@ public class WechatService {
         //根据ticket获取二维码图片
         showUrl = WechatUrlConstant.tempQrCodeShowUrl.replace("#{ticket}", ticket);
         //存储到redis
-        if (expireSeconds >= 30) {
+        if (expireSeconds - 3 > 0) {
             redisUtil.set(WechatRedisConstant.qrCodeShowUrlKey.replace("#{userId}", userId), showUrl, expireSeconds - 3);
         }
         return BaseResult.success(showUrl);
+    }
+
+    public static void main(String[] args) {
+        String s1="单位名称：招远市鲁鑫石油工具有限公司卫生所                      ~n~n~n消费类型：消费        ~n终端号：56850013       ~n订单号：20210421370637071016730010       ~n姓名：王家志        ~n参保地：潍坊市           ~n就医地：烟台市          ~n───────────────────  ~n     项目名称         单价      数量         ~n地塞米松磷酸钠注射液    0.30      1.00        ~n───────────────────       ~n消费金额：0.3        余额：   11.97                             ~n时间：2021-04-21  18:34:19                  ~n~chpg";
+        String s2 = s1.replace("~n", "\r\n").replace("~chpg","");
+        System.out.println(s2);
+        //System.out.println("单位名称：招远市鲁鑫石油工具有限公司卫生所                      \r\n\r\n\r\n消费类型：消费        \r\n终端号：56850013       \r\n订单号：20210421370637071016730010       \r\n姓名：王家志        \r\n参保地：潍坊市           \r\n就医地：烟台市          \r\n───────────────────  \r\n     项目名称         单价      数量         \r\n地塞米松磷酸钠注射液    0.30      1.00        \r\n───────────────────       \r\n消费金额：0.3        余额：   11.97                             \r\n时间：2021-04-21  18:34:19                  \r\n~chpg");
     }
 
 }
