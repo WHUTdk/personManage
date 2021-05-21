@@ -44,7 +44,7 @@ public class LruCache {
     public LruCache(int capacity) {
         this.map = new HashMap<>();
         this.capacity = capacity;
-        //默认头尾节点元素为-1,热门数据每次插入到在head的下一个，保证能够根据head和tail在o(1)的复杂度下找到热门和不热门元素
+        //默认头尾节点元素为-1,热门数据每次插入到在head的下一个，删除时每次删除tail的前一个，保证能够根据head和tail在o(1)的复杂度下找到热门和不热门元素
         this.head = new DoubleLinkedListNode(-1, -1);
         this.tail = new DoubleLinkedListNode(-1, -1);
     }
