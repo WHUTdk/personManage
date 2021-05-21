@@ -44,8 +44,7 @@ spring循环依赖和三级缓存
     
         单个Bean进行初始化时，A类先创建原始对象（new A()），会将原始对象
     放在三级缓存中，供其他类注入使用。B类将A类的原始对象注入后，顺利
-    完成创建，然后A类也能完成创建，最后A类的完整对象会放在单例池中，
-    同时移除之前一级缓存中的A类初始对象。
+    完成创建，然后A类也能完成创建，最后A类的完整对象会放在单例池中。
         如果A类有AOP等其他操作时，会产生一个问题：A类后续会创建一个代理对象
     放在单例池中，但是B类之前注入的是A的原始对象，这就造成了A类对象在单例池中
     有多个的问题。为了解决这个问题，引入了第二层缓存earlySingletonObjects
@@ -484,14 +483,26 @@ Mysql
     覆盖索引：
         查询的字段在索引树上，即触发覆盖索引。常见实现覆盖索引的方法是：将被查询的字段，建立到联合索引里去。
     explain关键字
-        id:
-        select_type:
-        table:
-        partition:
+        id：标识符 执行顺序的标识，id越大优先级越高，id相同，从上往下顺序执行
+        select_type: 查询类型  SIMPLE（简单查询）、PRIMARY（复杂查询的最外层查询）、UNION等
+        table:输出结果集的表   表名或表的简称
+        partition:匹配的分区 
+        type：表的连接类型  ALL、index、range、 ref、eq_ref、const、system、NULL（从左到右，性能从差到好）
+        possible_keys：查询时可能用到的索引
+        key：实际使用到的索引
+        key_len：索引字段的长度
+        ref：列与索引的比较  表查找值所用到的列或常量，常见的有： const(常量)，字段名等
+        rows：扫描的行数
+        filtered:按表条件过滤的行百分比
+        Extra:执行情况的描述和说明  
+            Using index：使用覆盖索引
+            Using index condition：查询的列未完全覆盖索引
+            Using where：未使用索引
+            Using temporary：需要使用临时表
     redo log：
         默认有两个文件 logfile0  logfile1  默认48M
-        数据加载到Buffer Pool后，执行写操作，生成redo log，顺序放在log buffer区域，然后添加到redo log文件中（mysql重启后会加载redo log）
-        write pos
+        数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件）
+        write position
         check point
         默认是事务提交后，redo log立即会持久化
     double write buffer:
