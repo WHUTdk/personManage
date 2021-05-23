@@ -502,13 +502,25 @@ Mysql
             Using index condition：查询的列未完全覆盖索引
             Using where：未使用索引
             Using temporary：需要使用临时表
+    隔离级别：
+        读未提交：可能发生脏读
+        读已提交：可能发送不可重复读
+        可重复读：可能发生幻读
+        串行化：
+    ACID：
+        A：atomivity 原子性，事务要么成功，要么失败，失败的话数据会回滚。undo log可以保证原子性
+        C： consistency一致性，
+        I： isolation 隔离性。锁和mvcc实现隔离性
+        D： durability 持久性，即使数据库宕机，也不会丢失已提交的事务。redo log可以保证持久性
     redo log：
-        默认有两个文件 logfile0  logfile1  默认48M
-        数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件）
+        数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件，保证事务持久性）
+        默认有两个文件 logfile0  logfile1  每个默认48M。持久化策略可配置，默认是事务提交后，脏页数据同步持久化到redo log file中
         write position
         check point
-        默认是事务提交后，redo log立即会持久化
     double write buffer:
+        触发check point后，会将buffer pool中的脏数据刷入磁盘，该过程根据双写机制，保证脏数据能够可靠的刷盘。
+    undo log：
+        作用：1、回滚；2、mvcc
         
     mysql主从复制过程：
         1、主节点 bin log dump线程
@@ -518,10 +530,16 @@ Mysql
         3、从节点sql进程
             SQL线程负责读取relaylog中的内容，解析成具体的操作并执行，最终保证主从数据库的一致性
     主从复制延迟原因，解决方案：
-        原因：读写分离，主库写，从库读。主库的DDL/DML操作顺序产生binlog效率很高，从库的sql线程是单线程，效率低，还可能与其他查询操作产生锁竞争，当业务繁忙时，产生的DDL超过SQL进程所承受的范围，执行会产生延时，从而同步数据就会出现延迟
+        原因：读写分离，主库写，从库读。主库的DDL/DML操作顺序产生binlog效率很高，从库的sql线程是单线程，效率低，还可能与其他查询操作产生锁竞争，当业务繁忙时，产生的DDL超过SQL进程所承受的范                围，执行会产生延时，从而同步数据就会出现延迟
         解决方案：
             1、提升硬件配置
             2、增加从库数量，分散压力
             3、写数据时，确保主从同步成功才返回成功，此方案影响性能一般不考虑
             4、引入缓存中间件，写数据时，将数据存入缓存，读数据时如果读不到的话就从缓存读取，当数据同步成功后再删除缓存数据
             4、如果是服务器流量太大，造成业务繁忙影响同步，可以对上层流量进行限流
+    mvcc 多版本并发控制:
+        mvcc主要为了提高并发读写性能，不用加锁就能实现多个事务并发读写，通过undo log和read-view实现
+        mysql开启一个事务，会分配一个事务id
+        mvcc会维护一个版本列表，针对每个写操作，会顺序添加到版本列表中，列表每行记录包括修改的数据、事务id、回滚指针
+        查询时，会生成一致性视图read-view,由当前未提交的事务id数组和以创建的最大事务id组成（[100,200],300），查询的结果需要跟read-view做对比从而得到最终结果。
+            mysql默认隔离级别是可重复读，同一个事务中，多次查询，会沿用第一次查询所用到的read-view（即使前后查询的表不一样）。
