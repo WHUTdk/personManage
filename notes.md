@@ -160,51 +160,6 @@ survivor为什么有两个
     执行GC，eden和survivor1活跃对象复制到survivor2，然后清空survivor1和Eden，
     下次gc时eden和survivor2活跃对象复制到survivor1，然后清空survivor2和Eden，如此反复。
 
-死锁
-
-     死锁排查思路：1.找到程序运行的进程号pid；2.jstack pid查看是否有死锁
-    
-     private static final Object a = new Object();
-     private static final Object b = new Object();
-    
-     public static void main(String[] args) throws InterruptedException {
-            //死锁模拟
-            new Thread(() -> {
-                synchronized (a) {
-                    try {
-                        System.out.println("线程1获取锁a");
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    synchronized (b) {
-                        System.out.println("线程1获取锁a和b");
-                    }
-                }
-            }).start();
-    
-            Thread.sleep(1000);
-            new Thread(() -> {
-                synchronized (b) {
-                    System.out.println("线程2获取锁b");
-                    synchronized (a) {
-                        System.out.println("线程2获取锁a和b");
-                    }
-                }
-            }).start();
-        }  
-        
-偏向锁、轻量级锁、重量级锁
-
-    synchronized同步锁自身的优化，当没有锁竞争时，会先获取偏向锁。如果有少量竞争，偏向锁
-    会升级为轻量级锁，竞争线程会启动自旋，如果自旋到达阈值仍然没有拿到锁，就会升级为重量级锁，
-    重量级锁会让竞争线程进入阻塞状态，直到持有锁的线程执行完唤醒它们。
-    
-cas乐观锁
-
-    三个基本操作数：共享变量内存值、预期值、要修改的值
-    先获取共享变量的内存值，赋值给临时变量作为预期值，更新数据时，比对内存值和预期值
-    只有当共享变量内存值=预期值时，共享变量内存值才会更新为要修改的值
 
 springboot启动原理（自动配置原理）
 
@@ -387,6 +342,65 @@ redisson
         else if (!addWorker(command, false))
             reject(command);
     
+volatile
+    
+    1、缓存可见性（cpu高速缓存修改数据后会立即写回主内存，其他线程会感知主内存数据的修改）
+    2、禁止cpu指令重排序
+    volatile缓存可见性底层实现原理：
+        底层实现主要通过汇编lock前缀指令，它会锁定这块内存区域的缓存，，并写道主内存中
+        lock指令的解释：
+            1、会将当前cpu缓存中的数据立即写入到系统内存
+            2、写回主内存的操作会使其他CPU缓存了该内存地址的数据无效
+            3、提供内存屏障功能，使lock前后指令不能重排序
+    volatile能保证可见性、有序性，但不能保证原子性
+    
+死锁
+
+     死锁排查思路：1.找到程序运行的进程号pid；2.jstack pid查看是否有死锁
+    
+     private static final Object a = new Object();
+     private static final Object b = new Object();
+    
+     public static void main(String[] args) throws InterruptedException {
+            //死锁模拟
+            new Thread(() -> {
+                synchronized (a) {
+                    try {
+                        System.out.println("线程1获取锁a");
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    synchronized (b) {
+                        System.out.println("线程1获取锁a和b");
+                    }
+                }
+            }).start();
+    
+            Thread.sleep(1000);
+            new Thread(() -> {
+                synchronized (b) {
+                    System.out.println("线程2获取锁b");
+                    synchronized (a) {
+                        System.out.println("线程2获取锁a和b");
+                    }
+                }
+            }).start();
+        }  
+        
+偏向锁、轻量级锁、重量级锁
+
+    synchronized同步锁自身的优化，当没有锁竞争时，会先获取偏向锁。如果有少量竞争，偏向锁
+    会升级为轻量级锁，竞争线程会启动自旋，如果自旋到达阈值仍然没有拿到锁，就会升级为重量级锁，
+    重量级锁会让竞争线程进入阻塞状态，直到持有锁的线程执行完唤醒它们。
+    
+cas乐观锁
+
+    三个基本操作数：共享变量内存值、预期值、要修改的值
+    先获取共享变量的内存值，赋值给临时变量作为预期值，更新数据时，比对内存值和预期值
+    只有当共享变量内存值=预期值时，共享变量内存值才会更新为要修改的值
+    
+    
 微服务优缺点
 
     优点：
@@ -527,6 +541,7 @@ Mysql
         D： durability 持久性，即使数据库宕机，也不会丢失已提交的事务。redo log可以保证持久性
     redo log：
         数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件，保证事务持久性）
+        redo log采用WAL预写式日志，分为prepare和commit两个阶段，更新数据写入到redo log后处于prepare状态，再告知执行器执行完成，随时可以提交事务
         默认有两个文件 logfile0  logfile1  每个默认48M。持久化策略可配置，默认是事务提交后，脏页数据同步持久化到redo log file中
         write position
         check point
@@ -559,3 +574,5 @@ Mysql
     行锁：
     表锁：
     间隙锁：
+    写锁（互斥锁）：
+    读锁（共享锁）：
