@@ -127,8 +127,8 @@ public class RedisUtil {
         }
     }
 
-    public boolean hasHashKey(String key, String item) {
-        return redisTemplate.opsForHash().hasKey(key, item);
+    public boolean hasHashKey(String key, String hashKey) {
+        return redisTemplate.opsForHash().hasKey(key, hashKey);
     }
 
     public void del(String... key) {
@@ -141,26 +141,21 @@ public class RedisUtil {
         }
     }
 
-    public void hDel(String key, Object... item) {
-        redisTemplate.opsForHash().delete(key, item);
+    public void hDel(String key, Object... hashKey) {
+        redisTemplate.opsForHash().delete(key, hashKey);
     }
 
     public Object get(String key) {
         return key == null ? null : redisTemplate.opsForValue().get(key);
     }
 
-    /**
-     * 获取hashKey和mapKey对应的值
-     *
-     * @param key    hashKey
-     * @param mapKey mapKey
-     */
-    public Object hGet(String key, String mapKey) {
-        return redisTemplate.opsForHash().get(key, mapKey);
+
+    public Object hGet(String key, String hashKey) {
+        return redisTemplate.opsForHash().get(key, hashKey);
     }
 
     /**
-     * 获取hashKey对应的所有键值
+     * 获取key对应的map
      *
      * @param key 键
      * @return map键值对

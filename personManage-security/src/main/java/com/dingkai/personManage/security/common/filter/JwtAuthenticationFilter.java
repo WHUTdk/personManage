@@ -68,7 +68,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
         // 查看源代码会发现调用getPrincipal()方法会返回一个实现了`UserDetails`接口的对象
         UserDO userDO = (UserDO) authResult.getPrincipal();
-        String token = JwtTokenUtils.createToken(userDO.getUsername(), false);
+        boolean rememberMe = false;
+        if ("dingkai".equals(userDO.getUsername())) {
+            rememberMe = true;
+        }
+        String token = JwtTokenUtils.createToken(userDO.getUsername(), rememberMe);
         // 返回创建成功的token
         // 这里创建的token只是单纯的token，按照jwt的规定，最后请求的格式应该是 `Bearer token`
         //response.setHeader("token", JwtTokenUtils.TOKEN_PREFIX + token);

@@ -10,6 +10,7 @@ import com.dingkai.personManage.business.code.vehicle.dao.VehicleMapper;
 import com.dingkai.personManage.business.code.vehicle.vo.req.SaveVehicleReqVo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public class VehicleServiceImpl implements VehicleService {
     /**
      * 保存车辆信息
      */
+    @Transactional
     @Override
     public void saveVehicle(SaveVehicleReqVo vehicleVO) throws Exception {
         Integer personId = vehicleVO.getPersonId();
@@ -42,6 +44,7 @@ public class VehicleServiceImpl implements VehicleService {
     /**
      * 根据id集合删除车辆信息
      */
+    @Transactional
     @Override
     public void deleteVehicleByIds(List<Integer> ids) {
         vehicleMapper.deleteBatchIds(ids);
@@ -97,14 +100,13 @@ public class VehicleServiceImpl implements VehicleService {
     /**
      * 根据人员id删除人员名下车辆信息
      */
+    @Transactional
     @Override
     public void deleteVehicleByPersonIds(List<Integer> personIds) {
         if (CollectionUtils.isNotEmpty(personIds)) {
-            for (Integer personId : personIds) {
-                QueryWrapper<VehicleDo> queryWrapper = new QueryWrapper<>();
-                queryWrapper.eq("person_id", personId);
-                vehicleMapper.delete(queryWrapper);
-            }
+            QueryWrapper<VehicleDo> queryWrapper = new QueryWrapper<>();
+            queryWrapper.in("person_id", personIds);
+            vehicleMapper.delete(queryWrapper);
         }
     }
 

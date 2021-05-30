@@ -42,17 +42,32 @@ spring循环依赖和三级缓存
     
 三级缓存
     
+    第一级缓存：singletonObjects = new ConcurrentHashMap() spring的单例池，存放初始化完成的对象
+    第二级缓存：earlySingletonObjects = new HashMap() 发生循环依赖时，会放入代理对象
+    第三级缓存：singletonFactories = new HashMap() 单例工厂，存放构造器生成的原始对象
         单个Bean进行初始化时，A类先创建原始对象（new A()），会将原始对象
-    放在三级缓存中，供其他类注入使用。B类将A类的原始对象注入后，顺利
-    完成创建，然后A类也能完成创建，最后A类的完整对象会放在单例池中，
-    同时移除之前一级缓存中的A类初始对象。
-        如果A类有AOP等其他操作时，会产生一个问题：A类后续会创建一个代理对象
-    放在单例池中，但是B类之前注入的是A的原始对象，这就造成了A类对象在单例池中
-    有多个的问题。为了解决这个问题，引入了第二层缓存earlySingletonObjects
-    具体体现在：B类在注入A类原始对象时，会创建A类的代理对象放入二级缓存中
-    同时删除一级缓存中的A类原始对象。
-        最后回到A类在BeanPostProcessor步骤里，会获取二缓存自己的代理对象，
-    并完成最终设置，然后放入一级缓存singletonObjects中并移除二级缓存中自己的代理对象。
+    放在第三级缓存中，供其他类注入使用。B类将A类的原始对象注入后，顺利
+    完成创建，然后A类也能完成创建，最后A类的完整对象会放在单例池中。
+        按照上面流程，其实二级缓存就已经能够解决循环依赖了。但spring中的有些Bean
+    需要AOP生成代理对象，那就不能使用原始对象来注入。spring引入第二级缓存earlySinletonObjects,
+    会提前AOP将代理对象放入第二级缓存中，然后删除第三级缓存。
+        当然也可以这样设计，在原始对象生成后立即生成代理对象，缓存中不放原始对象，
+    直接将代理对象放入缓存中，这样也只使用了二级缓存就解决了。这种设计不管是否有循环依赖，都会提前提前进行了AOP，
+    违背了AOP的设计原则，AOP一般发生在Bean的后置处理中，不直接参与Bean的初始化流程。
+    spring只有在发生循环依赖时，才会提前进行AOP，在属性设置期间，将代理对象放入第二级缓存中，让其他Bean完成初始化。
+   
+
+spring事务的传播机制
+spring事务失效场景
+    
+    spring事务的实现原理是AOP，事务失效的根本原因是AOP不起作用。
+    1、发生自调用，类里面使用this调用方法，此时的this不是代理对象而是类对象本身，事务不会生效
+    2、方法不是public的
+    3、数据库存储引擎不支持事务
+    4、事务未被spring管理
+    5、事务指定异常了，抛出的异常非指定的异常
+    6、异常被catch捕捉
+
 
 类加载器、加载机制、加载过程
         
@@ -145,51 +160,6 @@ survivor为什么有两个
     执行GC，eden和survivor1活跃对象复制到survivor2，然后清空survivor1和Eden，
     下次gc时eden和survivor2活跃对象复制到survivor1，然后清空survivor2和Eden，如此反复。
 
-死锁
-
-     死锁排查思路：1.找到程序运行的进程号pid；2.jstack pid查看是否有死锁
-    
-     private static final Object a = new Object();
-     private static final Object b = new Object();
-    
-     public static void main(String[] args) throws InterruptedException {
-            //死锁模拟
-            new Thread(() -> {
-                synchronized (a) {
-                    try {
-                        System.out.println("线程1获取锁a");
-                        Thread.sleep(2000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    synchronized (b) {
-                        System.out.println("线程1获取锁a和b");
-                    }
-                }
-            }).start();
-    
-            Thread.sleep(1000);
-            new Thread(() -> {
-                synchronized (b) {
-                    System.out.println("线程2获取锁b");
-                    synchronized (a) {
-                        System.out.println("线程2获取锁a和b");
-                    }
-                }
-            }).start();
-        }  
-        
-偏向锁、轻量级锁、重量级锁
-
-    synchronized同步锁自身的优化，当没有锁竞争时，会先获取偏向锁。如果有少量竞争，偏向锁
-    会升级为轻量级锁，竞争线程会启动自旋，如果自旋到达阈值仍然没有拿到锁，就会升级为重量级锁，
-    重量级锁会让竞争线程进入阻塞状态，直到持有锁的线程执行完唤醒它们。
-    
-cas乐观锁
-
-    三个基本操作数：共享变量内存值、预期值、要修改的值
-    先获取共享变量的内存值，赋值给临时变量作为预期值，更新数据时，比对内存值和预期值
-    只有当共享变量内存值=预期值时，共享变量内存值才会更新为要修改的值
 
 springboot启动原理（自动配置原理）
 
@@ -372,6 +342,65 @@ redisson
         else if (!addWorker(command, false))
             reject(command);
     
+volatile
+    
+    1、缓存可见性（cpu高速缓存修改数据后会立即写回主内存，其他线程会感知主内存数据的修改）
+    2、禁止cpu指令重排序
+    volatile缓存可见性底层实现原理：
+        底层实现主要通过汇编lock前缀指令，它会锁定这块内存区域的缓存，，并写道主内存中
+        lock指令的解释：
+            1、会将当前cpu缓存中的数据立即写入到系统内存
+            2、写回主内存的操作会使其他CPU缓存了该内存地址的数据无效
+            3、提供内存屏障功能，使lock前后指令不能重排序
+    volatile能保证可见性、有序性，但不能保证原子性
+    
+死锁
+
+     死锁排查思路：1.找到程序运行的进程号pid；2.jstack pid查看是否有死锁
+    
+     private static final Object a = new Object();
+     private static final Object b = new Object();
+    
+     public static void main(String[] args) throws InterruptedException {
+            //死锁模拟
+            new Thread(() -> {
+                synchronized (a) {
+                    try {
+                        System.out.println("线程1获取锁a");
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    synchronized (b) {
+                        System.out.println("线程1获取锁a和b");
+                    }
+                }
+            }).start();
+    
+            Thread.sleep(1000);
+            new Thread(() -> {
+                synchronized (b) {
+                    System.out.println("线程2获取锁b");
+                    synchronized (a) {
+                        System.out.println("线程2获取锁a和b");
+                    }
+                }
+            }).start();
+        }  
+        
+偏向锁、轻量级锁、重量级锁
+
+    synchronized同步锁自身的优化，当没有锁竞争时，会先获取偏向锁。如果有少量竞争，偏向锁
+    会升级为轻量级锁，竞争线程会启动自旋，如果自旋到达阈值仍然没有拿到锁，就会升级为重量级锁，
+    重量级锁会让竞争线程进入阻塞状态，直到持有锁的线程执行完唤醒它们。
+    
+cas乐观锁
+
+    三个基本操作数：共享变量内存值、预期值、要修改的值
+    先获取共享变量的内存值，赋值给临时变量作为预期值，更新数据时，比对内存值和预期值
+    只有当共享变量内存值=预期值时，共享变量内存值才会更新为要修改的值
+    
+    
 微服务优缺点
 
     优点：
@@ -461,3 +490,109 @@ nginx正向代理和反向代理
 linux实用命令
 
     du -sh *|sort -h   查看当前目录磁盘占用情况
+    
+
+Mysql
+
+    搜索引擎：
+        1、innodb：支持事务；提供行级锁和外键约束；使用聚集索引；适合大数据量
+        2、Myisam：不支持事务；不提供行级锁和外键约束；使用非聚集索引；适合小数据量，查询多修改少的情况
+    索引：
+        1、聚集索引：使用B+树索引结构，非叶子节点为索引值，叶子节点包含索引值和完整的数据记录；
+        2、非聚集索引：使用B+树索引结构，非叶子节点为索引值，叶子节点包含索引值和索引指向的数据地址；
+    B树、B+树区别：
+        B树每个非叶子节点包含索引值和数据记录，B+树非叶子节点只包含索引值，使用B+树，保证每个非叶子节点能够存储的索引值更多（默认16kb）,能够降低索引树的高度；
+        B树上下层级节点没有冗余索引，查询数据需要遍历上下层级。B+树每个节点首位索引值冗余了上一级节点的索引，B+树的叶子节点包含了所有索引值，查询直接遍历叶子节点就行；
+        B树叶子节点的之间没有双向指针，B+树叶子节点之间有双向指针，B+树叶子节点所有索引值天然排序；
+    为什么很少用Hash索引：
+        hash索引使用类似hash表的结构，数组+链表，不支持范围查询
+    为什么不使用二叉树：
+        B+树每个节点包含更多的索引值，一次性能够加载更多的数据，减少磁盘IO，而且能够降低树的高度，减少查询次数和复杂度；
+    回表：
+        普通索引（非主键索引）：先扫描普通索引树定位主键值，再扫描主键索引树定位行记录。
+    覆盖索引：
+        查询的字段在索引树上，即触发覆盖索引。常见实现覆盖索引的方法是：将被查询的字段，建立到联合索引里去。
+    explain关键字
+        id：标识符 执行顺序的标识，id越大优先级越高，id相同，从上往下顺序执行
+        select_type: 查询类型  SIMPLE（简单查询）、PRIMARY（复杂查询的最外层查询）、UNION等
+        table:输出结果集的表   表名或表的简称
+        partition:匹配的分区 
+        type：表的连接类型  ALL、index、range、 ref、eq_ref、const、system、NULL（从左到右，性能从差到好）
+        possible_keys：查询时可能用到的索引
+        key：实际使用到的索引
+        key_len：索引字段的长度
+        ref：列与索引的比较  表查找值所用到的列或常量，常见的有： const(常量)，字段名等
+        rows：扫描的行数
+        filtered:按表条件过滤的行百分比
+        Extra:执行情况的描述和说明  
+            Using index：使用覆盖索引
+            Using index condition：查询的列未完全覆盖索引
+            Using where：未使用索引
+            Using temporary：需要使用临时表
+    隔离级别：
+        读未提交：可能发生脏读
+        读已提交：可能发送不可重复读
+        可重复读：可能发生幻读
+        串行化：
+    ACID：
+        A：atomivity 原子性，事务要么成功，要么失败，失败的话数据会回滚。undo log可以保证原子性
+        C： consistency一致性，其他三个特性保证了最终一致性
+        I： isolation 隔离性。锁（写-写操作）和mvcc（写-读操作）实现隔离性
+        D： durability 持久性，即使数据库宕机，也不会丢失已提交的事务。redo log可以保证持久性
+    redo log：
+        数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件，保证事务持久性）
+        redo log采用WAL预写式日志，分为prepare和commit两个阶段，更新数据写入到redo log后处于prepare状态，再告知执行器执行完成，随时可以提交事务
+        默认有两个文件 logfile0  logfile1  每个默认48M。持久化策略可配置，默认是事务提交后，脏页数据同步持久化到redo log file中
+        write position
+        check point
+    double write buffer:
+        触发check point后，会将buffer pool中的脏数据刷入磁盘，该过程根据双写机制，保证脏数据能够可靠的刷盘。
+    undo log：
+        作用：1、回滚；2、mvcc
+        
+    mysql主从复制过程：
+        1、主节点 bin log dump线程
+            当从节点连接主节点时，主节点会创建一个log dump线程，用于发送bin log内容
+        2、从节点I/O线程
+            当从节点执行start slave命令后，从节点会创建一个I/O线程用来连接主节点，请求主库中更新的bin log，I/O线程接收主节点bin log dump进程发来的更新内容，保存在本地的relaylog中
+        3、从节点sql进程
+            SQL线程负责读取relaylog中的内容，解析成具体的操作并执行，最终保证主从数据库的一致性
+    同步方式：
+        1、全同步复制：所有从节点同步完成才返回主节点成功，性能低
+        2、半同步复制：只要有一台从节点同步成功，就返回主节点成功
+    主从复制延迟原因，解决方案：
+        原因：读写分离，主库写，从库读。主库的DDL/DML操作顺序产生binlog效率很高，从库的sql线程是单线程，效率低，还可能与其他查询操作产生锁竞争，当业务繁忙时，产生的DDL超过SQL进程所承受的范                围，执行会产生延时，从而同步数据就会出现延迟
+        解决方案：
+            1、提升硬件配置
+            2、增加从库数量，分散压力
+            3、写数据时，确保主从同步成功才返回成功，此方案影响性能一般不考虑
+            4、引入缓存中间件，写数据时，将数据存入缓存，读数据时如果读不到的话就从缓存读取，当数据同步成功后再删除缓存数据
+            4、如果是服务器流量太大，造成业务繁忙影响同步，可以对上层流量进行限流
+    mvcc 多版本并发控制:
+        mvcc主要为了提高并发读写性能，不用加锁就能实现多个事务并发读写，通过undo log和read-view实现
+        mysql开启一个事务，会分配一个事务id
+        mvcc会维护一个版本列表，针对每个写操作，会顺序添加到版本列表中，列表每行记录包括修改的数据、事务id、回滚指针
+        查询时，会生成一致性视图read-view,由当前未提交的事务id数组和以创建的最大事务id组成（[100,200],300），查询的结果需要跟read-view做对比从而得到最终结果。
+            mysql默认隔离级别是可重复读，同一个事务中，多次查询，会沿用第一次查询所用到的read-view（即使前后查询的表不一样）。
+    行锁：
+    表锁：
+    间隙锁：锁住区间，遵循左开右闭原则。间隙锁可以帮助解决幻读
+    临建锁（next-key-lock）：行锁和间隙锁的结合，会把查询出来的数据锁住，同时也会把查询区间锁住，相邻的下一个区间也会锁住，next-ley-lock可以帮助解决幻读
+    写锁（互斥锁）：加上读锁后，其他事务只能对该数据加读锁，不能加写锁。
+    读锁（共享锁）：加上写锁后，其他事务不能加任何锁，不能修改也不能读取，直到写锁释放。写锁可以避免脏读
+
+    
+dubbo
+    
+    超时时间：默认1000ms
+    重试次数：默认3次（不包含第一次，失败后重试三次）
+
+    配置覆盖规则
+        1、方法级优之，接口级次之，全局配置再次之
+        2、同级别消费者优先，提供者次之
+        
+    负载均衡策略：
+        1、Random，基于权重的随机负载均衡，默认配置
+        2、RoundRobin，基于权重的轮询
+        3、LeastActive，最少活跃数，选择上一次请求耗时最短的服务器
+        4、ConsistentHash，一致性hash

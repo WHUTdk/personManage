@@ -7,12 +7,12 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="personManage-security" />
         <module name="personManage-web" />
-        <module name="personManage-api" />
         <module name="personManage-common" />
         <module name="personManage-provider" />
         <module name="personManage-business" />
+        <module name="personManage-security" />
+        <module name="personManage-api" />
       </profile>
     </annotationProcessing>
   </component>
