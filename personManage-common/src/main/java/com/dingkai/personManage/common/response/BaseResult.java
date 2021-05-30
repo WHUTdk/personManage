@@ -1,10 +1,12 @@
 package com.dingkai.personManage.common.response;
 
+import com.dingkai.personManage.common.enums.CodeEnum;
+
 public class BaseResult<T> {
 
-    private static final String successCode = "0";
-    private static final String errorCode = "-1";
-    private static final String successMsg = "success";
+    private static final String successCode = CodeEnum.SUCCESS.getCode();
+    private static final String errorCode = CodeEnum.ERROR.getCode();
+    private static final String successMsg = CodeEnum.SUCCESS.getMessage();
     private String code;
 
     private String msg;

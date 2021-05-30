@@ -34,7 +34,7 @@ public class HeartbeatClient {
 
     private static HeartbeatConfig heartbeatConfig;
 
-    private static final long heartbeatInterval = 10L * 60 * 1000;
+    private static final long heartbeatInterval = 5000L;
 
     private static ScheduledFuture<?> scheduledFuture;
 
@@ -65,7 +65,7 @@ public class HeartbeatClient {
         if (heartbeatConfig == null) {
             throw new IllegalArgumentException("请先设置心跳配置参数");
         }
-        logger.info("启动心跳线程");
+        logger.info("开始启动心跳线程");
         if (IS_RUNNING.get()) {
             logger.info("心跳检测线程已启动,无需再次启动");
             return;
@@ -121,16 +121,19 @@ public class HeartbeatClient {
 
 
     private static void sendHeartbeat() {
-        BaseResult<Boolean> result = null;
+        BaseResult<Boolean> result = new BaseResult<>();
         //todo 调用远程心跳接口
-        logger.info("开始调用心跳检测接口");
+        logger.info("开始调用心跳检测接口,当前心跳检测状态：{}", HEARTBEAT_FLAG);
         heartbeatConfig.getHeartbeatParam().setTimestamp(System.currentTimeMillis());
+        result.setCode("0");
+        result.setData(true);
         if (result != null && CodeEnum.SUCCESS.getCode().equals(result.getCode())) {
-            if (result.getData()) {
+            if (result.getData() != null && result.getData()) {
                 HeartbeatClient.HEARTBEAT_FLAG.getAndSet(true);
                 heartbeatConfig.getHeartbeatCallback().success(heartbeatConfig.getHeartbeatParam());
             } else {
                 // 非法心跳
+                HeartbeatClient.HEARTBEAT_FLAG.getAndSet(false);
                 heartbeatConfig.getHeartbeatCallback().failure(heartbeatConfig.getHeartbeatParam());
             }
         } else {

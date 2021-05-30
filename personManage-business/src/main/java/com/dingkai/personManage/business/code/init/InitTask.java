@@ -13,6 +13,7 @@ public class InitTask {
 
     private static final Logger logger = LoggerFactory.getLogger(InitTask.class);
 
+    @Autowired
     private HeartbeatTask heartbeatTask;
 
     @PostConstruct
