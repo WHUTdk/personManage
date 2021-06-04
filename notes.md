@@ -1,4 +1,3 @@
-# personManage
 spring bean生命周期
 
     1.扫描类得到BeanDefinition(BeanClass、scope、dependOn、initMethodName、propertyValues...)
@@ -57,7 +56,21 @@ spring循环依赖和三级缓存
     spring只有在发生循环依赖时，才会提前进行AOP，在属性设置期间，将代理对象放入第二级缓存中，让其他Bean完成初始化。
    
 
+spring事务原理
+
 spring事务的传播机制
+
+    （1）死活不要事务的
+        PROPAGATION_NEVER：没有就非事务执行，有就抛出异常
+        PROPAGATION_NOT_SUPPORTED：没有就非事务执行，有就将事务挂起
+    （2）事务可有可无
+        PROPAGATION_SUPPORTS：没有就非事务执行，有就使用当前事务执行
+    （3）必须要有事务
+        PROPAGATION_REQUIRED：默认配置。没有就新建事务，有就使用当前事务
+        PROPAGATION_REQUIRED_NEW：不管有没有，都新建事务，原来有就将原事务挂起。内部事务抛异常回滚，外部事务也会异常回滚。外部事务异常回滚，内部事务不会回滚
+        PROPAGATION_NESTED；没有就嵌套事务，有就使用当前事务。如果嵌套，内部事务异常回滚会影响外部事务
+        PROPAGATION_MANDATORY：没有就抛出异常，有就使用当前事务
+
 spring事务失效场景
     
     spring事务的实现原理是AOP，事务失效的根本原因是AOP不起作用。
@@ -105,22 +118,14 @@ jvm内存结构
                 survivor区小于等于某个年龄的对象的总和占用空间超过survivor区的50%
                 大对象可以直接进入老年代
     5.方法区：线程共享。包括类信息（方法、字段、构造器）、运行时常量池、静态变量
-            方法区是一种规范，具体实现有永久代（1.8之前，PermGen在jvm内存）和元空间（Metaspace在本地内存）
+            方法区是一种规范，具体实现有永久代（1.8之前，PermGen在jvm内存）和元空间（Metaspace在操作系统内存）
     
-内存溢出/泄漏问题定位
+jvm内存分代模型
 
-    1.jps查看java进程，找到程序进程pid
-    2.jmap -heap pid 查看堆内存情况 / jinfo pid
-    3.jmap ‐histo:live pid | more 查看活跃对象，注意：用这个命令会导致堆停止
-      jmap -dump:format=b,live,file=dump_xx.dat pid  将内存使用情况dump到文件中
-    4.jvm参数中设置内存溢出转储文件，-XX:+HeapDumpOnOutOfMemoryError
-
-cpu占用过高问题定位
-
-    1.top命令，找到占用cpu高的线程PID
-    2.使用ps H -eo pid,tid,%cpu,%mem|grep pid  找到进程下的所有线程，及线程对应占用cpu、内存情况
-    3.将占用cpu高的线程tid转为十六进制
-    4.使用jstack pid 展示进程下所有线程详细情况，对比nid与上一步tid十六进制的值，找到占用cpu高的线程详细情况
+    新生代、老年代、永久区（jdk1.8之前）/元空间
+    永久代和元空间区别：
+        1、永久代必须指定大小  元空间可以不用设置大小，无上限（受限于物理内存）
+        2、字符串常量 1.7在永久代  1.8在堆中
 
 jvm垃圾回收器
 
@@ -132,8 +137,7 @@ jvm垃圾回收器
 
     1.标记-清除：标记活跃对象，清除不活跃的对象。缺点：会造成内存碎片
     2.复制：开辟一个内存空间，将活跃的对象复制到这个空间中。缺点：消耗额外内存
-    3.标记-整理：
-    4.分代收集：
+    3.标记-整理（标记-压缩）：垃圾对象进行移动，压缩在一起进行回收，不会产生内存碎片，但效率偏低
 
 判断是否垃圾对象
 
@@ -159,9 +163,25 @@ survivor为什么有两个
     执行复制算法GC时，需要两个survivor区的交替移动活跃对象。
     执行GC，eden和survivor1活跃对象复制到survivor2，然后清空survivor1和Eden，
     下次gc时eden和survivor2活跃对象复制到survivor1，然后清空survivor2和Eden，如此反复。
+    
+    
+内存溢出/泄漏问题定位
+
+    1.jps查看java进程，找到程序进程pid
+    2.jmap -heap pid 查看堆内存情况 / jinfo pid
+    3.jmap ‐histo:live pid | more 查看活跃对象，注意：用这个命令会导致堆停止
+      jmap -dump:format=b,live,file=dump_xx.dat pid  将内存使用情况dump到文件中
+    4.jvm参数中设置内存溢出转储文件，-XX:+HeapDumpOnOutOfMemoryError
+
+cpu占用过高问题定位
+
+    1.top命令，找到占用cpu高的线程PID
+    2.使用ps H -eo pid,tid,%cpu,%mem|grep pid  找到进程下的所有线程，及线程对应占用cpu、内存情况
+    3.将占用cpu高的线程tid转为十六进制
+    4.使用jstack pid 展示进程下所有线程详细情况，对比nid与上一步tid十六进制的值，找到占用cpu高的线程详细情况
 
 
-springboot启动原理（自动配置原理）
+springboot自动配置原理
 
     @SpringBootApplication注解：
         @SpringBootConfiguration
@@ -194,6 +214,37 @@ springboot加载配置文件信息方式
     2.Environment类
     3.@ConfigurationProperties注解，指定前缀
     4.@PropertiesSource注解读取指定配置文件
+    
+springboot jar为什么能直接运行？
+
+    jar包目录结构
+        META-INF：
+            包含jar的基础信息，包括入口程序
+            Main-Class：JarLauncher
+            Start-Class：自己定义的Main函数
+        BOOT-INF
+            classes应用程序
+            lib 第三方依赖jar包
+        springboot loader相关类
+    
+    启动jar时，会执行JarLauncher的main方法，接着调用自身的launch方法，该方法内部会先获取JarFileArchive集合，
+    然后根据JarFileArchive集合创建类加载器LaunchedURLClassLoader
+    之后会另起一个线程执行Start-Class指向的自定义的main方法，该main方法执行后，会构造spring容器和启动内置servlet容器等过程
+
+redis数据结构
+
+    1、String
+        SDS动态字符串，SDS属性包括已使用的长度、空闲未使用的长度、字符数组
+        操作字符串，redis会执行以下操作：1、计算出大小是否足够；2、开辟空间至满足所需大小
+        优点：1、快速获取字符串长度；2、避免缓冲区溢出；3、降低空间分配次数提升内存使用效率
+    2、List
+        压缩列表zipList、双端列表linkedList
+    3、set
+        整数值集合intSet、hashTable
+    4、zset
+        压缩列表zipList、跳跃表和字典skipList
+    5、Hash
+        压缩列表zipList、hashTable
 
 redis内存淘汰策略
 
@@ -222,6 +273,7 @@ redis持久化
             1.save：手动执行save命令，同步操作持久化，会阻塞客户端请求
             2.bgsave：手动执行bgsave命令，异步操作，执行fork创建子进程执行持久化，不会阻塞客户端请求
             3.自动化：根据配置文件配置的数据修改频率自动触发 save m n
+        数据量大的话，RDB操作严重占用磁盘IO操作
     2.AOF
         追加方式，将每一个写命令追加到文件中，文件名为appendonly.aof
         AOF持久化触发方式：
@@ -249,7 +301,70 @@ redis缓存雪崩、缓存穿透、缓存击穿
         解决方案：热点数据不设置过期
                 互斥锁
 
+redis集群模式
+
+    1、主从模式
+        分为master和slave。master写，slave读
+        工作机制：
+            当slave初始化启动后，主动向master发送sync命令，master接收到同步命令后，在后台保存快照以及使用临时缓冲区保存执行快照这段时间内的命令，
+            快照完成后，会将快照文件和临时缓冲区的命令发送给slave，slave加载快照文件和缓冲区命令，实现主从的数据一致性。
+            初始化完成之后，master每次接收到写命令，都会主动发送给slave。
+        主从模式master挂掉后，无法写入数据。
+    2、Sentinel模式（哨兵）
+        sentinel建立在主从模式的基础上。当master挂掉后，sentinel会从slave中选择一台作为master，并修改所有节点的配置文件，让其他slave都指向新的master
+        master重启后，不再是master，而是变为slave
+        sentinel一般也会集群部署，sentinel集群之间会互相监控。sentinel具有高可用性
+        工作机制：
+            每个sentinei以每秒一次的频率向master、slave以及其他sentinel发送ping命令，
+            如果一个实例的最后一次有效PING回复时间超过down-after-milliseconds 选项所指定的值， 则这个实例会被sentinel标记为主观下线
+            如果master被标记为主观下线，则监视这个master的所有sentinel都要以每秒一次的频率确认master是否进入主观下线
+            如果有足够数量的sentinel（配置文件设置个数）确认master进入主观下线状态，那这台master会被标记为客观下线
+            一般情况下，每个sentinel会以每10秒的频率向master发送info 命令（返回服务器信息和统计数据）
+            如果master被标记为客观下线，那么频率会变为每秒一次发送info 命令
+        当使用sentinel模式的时候，客户端就不要直接连接Redis，而是连接sentinel的ip和port，由sentinel来提供具体的可提供服务的Redis实现，
+        这样当master节点挂掉以后，sentinel就会感知并将新的master节点提供给使用者。
+    3、Cluster模式
+        sentinel模式基本可以满足一般生产的需求，具备高可用性。但是当数据量过大到一台服务器存放不下的情况时，主从模式或sentinel模式就不能满足需求了，
+        这个时候需要对存储的数据进行分片，将数据存储到多个Redis实例中。cluster模式的出现就是为了解决单机Redis容量有限的问题，将Redis的数据根据一定的规则分配到多台机器。
+        cluster投票：
+            集群所有master参与投票，超过半数master节点与某master节点通讯超时，就认为该master挂掉
+            如果集群超过半数master挂掉，无论是否有slave，整个集群都会进入fail不可用状态
+        cluster哈希槽：
+            Redis集群中内置了16384个哈希槽，当需要在Redis集群中放置一个key-valu 时，redis先对key使用crc16算法算出一个结果，
+            然后把结果对16384求余数，这样每个key都会对应一个编号在0-16383之间的哈希槽，redis会根据节点数量大致均等的将哈希槽映射到不同的节点
+        cluster什么情况会进入完全不可以状态
+            1、master挂掉，且当前master没有slave，导致hash槽映射不完整（某个范围内的哈希槽不可用），集群会进入fail不可用状态
+            2、如果集群超过半数master挂掉，无论是否有slave，整个集群都会进入fail不可用状态
+
+redis数据库缓存一致性
+
+    1、更新数据库后，删除缓存
+        删除操作失败，采用补偿机制
+        使用数据库的binlog，数据变更后操作redis
+    2、删除缓存。更新数据库后，再延迟删除缓存
+    
+redis分布式锁要注意什么问题？
+
+    1、锁要设置超时时间
+    2、锁要手动释放
+    3、业务超时，超过锁超时时间，锁被其他线程获取
+        定时线程，给锁续命
+    4、锁被其他线程释放
+        每个线程给锁的value值加上唯一标识
+    5、集群模式，加完锁的master突然挂掉，锁还未同步到新master中，锁丢失，其他线程又能够获取锁
+        redlock
+    
 redisson
+
+    运行原理：
+        通过lua脚本加锁，同时启动看门狗异步任务，维护锁的超时时间。锁的value会加上线程id
+        通过发布订阅模式，通知其他线程当前锁的状态，其他线程循环尝试是否能加锁
+        同一个线程，支持可重入锁，每次加锁，统计客户端的加锁次数+1，当加锁次数为0时，代表该锁可以被释放
+        通过lua脚本释放锁，保证原子性
+        看门狗（watch dog）:定时任务，每隔（锁超时时间的1/3）秒，就会检查锁是否还存在，存在的话，就重新设置生存时间，默认设置超时时间30s
+        
+    缺点：
+        集群模式下，master挂掉后，锁未及时同步，新的master可能又会获取到锁。可以用红锁解决redLock
                 
 线程的状态
 
@@ -400,6 +515,25 @@ cas乐观锁
     先获取共享变量的内存值，赋值给临时变量作为预期值，更新数据时，比对内存值和预期值
     只有当共享变量内存值=预期值时，共享变量内存值才会更新为要修改的值
     
+threadLocal
+    
+    线程维护一个ThreadLocalMap,map的key为threadLocal对象（实例对象的引用地址），value为存储的值。
+    ThreadLocalMap的Enrty数组继承了弱引用 extends WeakReference<ThreadLocal<?>>，threadLocal对象实例通过弱引用指向map的key。
+    threadLocal对象实例指向了两个引用：
+        1、ThreadLocal threadLocal = new ThreadLoca<>()    强引用
+        2、线程中ThreadLocalMap的key     弱引用
+    
+    为什么Enrty要使用弱引用，而不是强引用？
+        如果使用强引用，即使将ThreadLocal对象的引用置为空（threadLocal=null）,线程中的ThreadLocalMap的key仍然指向threadLocal实例对象，不会被回收。会存在内存泄露。
+        即使是使用弱引用，仍然会存在内存泄露风险。
+    
+    为什么threadLocal使用完后要remove？
+        线程ThreadLocalMap中的key是弱引用指向threadLocal实例对象，如果threadLocal实例对象被回收后（threadLocal=null），线程ThreadLocalMap中的key会变为null，
+        此时map中的value将无法被访问到，value无法被回收，依然存在内存泄漏问题。
+        其实threadLocal内部，每次get、set时会自己清理key为null的value，但是如果一直没有执行get、set，那么value会一直存在
+        所以每次使用完threadLocal后，要主动清理value。
+        
+    threadLocal和线程池结合使用时，注意线程执行完后，要主动清理ThreadLocalMap，否则可能会出现数据混乱问题。
     
 微服务优缺点
 
@@ -529,6 +663,7 @@ Mysql
             Using index condition：查询的列未完全覆盖索引
             Using where：未使用索引
             Using temporary：需要使用临时表
+            
     隔离级别：
         读未提交：可能发生脏读
         读已提交：可能发送不可重复读
@@ -539,6 +674,7 @@ Mysql
         C： consistency一致性，其他三个特性保证了最终一致性
         I： isolation 隔离性。锁（写-写操作）和mvcc（写-读操作）实现隔离性
         D： durability 持久性，即使数据库宕机，也不会丢失已提交的事务。redo log可以保证持久性
+        
     redo log：
         数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件，保证事务持久性）
         redo log采用WAL预写式日志，分为prepare和commit两个阶段，更新数据写入到redo log后处于prepare状态，再告知执行器执行完成，随时可以提交事务
@@ -560,6 +696,7 @@ Mysql
     同步方式：
         1、全同步复制：所有从节点同步完成才返回主节点成功，性能低
         2、半同步复制：只要有一台从节点同步成功，就返回主节点成功
+        
     主从复制延迟原因，解决方案：
         原因：读写分离，主库写，从库读。主库的DDL/DML操作顺序产生binlog效率很高，从库的sql线程是单线程，效率低，还可能与其他查询操作产生锁竞争，当业务繁忙时，产生的DDL超过SQL进程所承受的范                围，执行会产生延时，从而同步数据就会出现延迟
         解决方案：
@@ -568,18 +705,22 @@ Mysql
             3、写数据时，确保主从同步成功才返回成功，此方案影响性能一般不考虑
             4、引入缓存中间件，写数据时，将数据存入缓存，读数据时如果读不到的话就从缓存读取，当数据同步成功后再删除缓存数据
             4、如果是服务器流量太大，造成业务繁忙影响同步，可以对上层流量进行限流
+            
     mvcc 多版本并发控制:
         mvcc主要为了提高并发读写性能，不用加锁就能实现多个事务并发读写，通过undo log和read-view实现
         mysql开启一个事务，会分配一个事务id
         mvcc会维护一个版本列表，针对每个写操作，会顺序添加到版本列表中，列表每行记录包括修改的数据、事务id、回滚指针
         查询时，会生成一致性视图read-view,由当前未提交的事务id数组和以创建的最大事务id组成（[100,200],300），查询的结果需要跟read-view做对比从而得到最终结果。
             mysql默认隔离级别是可重复读，同一个事务中，多次查询，会沿用第一次查询所用到的read-view（即使前后查询的表不一样）。
+            
     行锁：
     表锁：
-    间隙锁：锁住区间，遵循左开右闭原则。间隙锁可以帮助解决幻读
-    临建锁（next-key-lock）：行锁和间隙锁的结合，会把查询出来的数据锁住，同时也会把查询区间锁住，相邻的下一个区间也会锁住，next-ley-lock可以帮助解决幻读
-    写锁（互斥锁）：加上读锁后，其他事务只能对该数据加读锁，不能加写锁。
-    读锁（共享锁）：加上写锁后，其他事务不能加任何锁，不能修改也不能读取，直到写锁释放。写锁可以避免脏读
+    间隙锁：锁住查询区间。间隙锁可以帮助解决幻读。查询没有匹配到记录会用到间隙锁
+    临键锁（next-key-lock）：行锁和间隙锁的结合，会把查询区间锁住，相邻的下一个区间也会锁住（左开右闭），查询匹配到数据会用临键锁。next-ley-lock可以帮助解决幻读
+    读锁（共享锁）：加上读锁后，其他事务只能对该数据加读锁，不能加写锁。
+    写锁（互斥锁）：加上写锁后，其他事务不能加任何锁，不能修改也不能读取，直到写锁释放。写锁可以避免脏读
+    意向共享锁：
+    意向排他锁：
 
     
 dubbo
@@ -592,7 +733,127 @@ dubbo
         2、同级别消费者优先，提供者次之
         
     负载均衡策略：
+        服务端服务/方法级别、客户端服务/方法级别都可以配置负载均衡。但是，具体实现在客户端，客户端根据策略选择服务
         1、Random，基于权重的随机负载均衡，默认配置
+            实现原理：
+                1、累加权重之和，顺便判断所有权重是否一样
+                2、如果权重不一样，对总权重执行nextInt方法，int offset = ThreadLocalRandom.current().nextInt(totalWeight);
+                3、根据生成的随机数，判断落在哪个区间  遍历执行offset -= weights[i];   offset<0   return invokers.get(i);
+                4、如果权重都一样，直接取随机
         2、RoundRobin，基于权重的轮询
+            实现原理：
+                1、设置maxCurrent，记录当前最大权重值。concurrentHashMap记录每个URL的权重对象，invokers数量变动时，map会清理重置
+                2、遍历invokers，比较maxCurrent，获取集合中最大权重的invoker
+                3、将本次使用的invoker权重置为最低，以便下次不会再使用
         3、LeastActive，最少活跃数，选择上一次请求耗时最短的服务器
+            实现原理：
+                没接收到一个请求，活跃数+1，请求结束活跃数-1。leastActive：最小活跃数  leastCount：是最小活跃数的invoker个数
+                1、获取invoker的活跃数
+                2、如果有多个invoker都是最小活跃数，就判断权重是否相同
+                3、如果只有一个invoker是最小活跃数，直接返回
+                4、多个invoker都是最小活跃数，权重不同，进行权重随机逻辑
+                5、权重相同，直接随机选择invoker
         4、ConsistentHash，一致性hash
+            实现原理：
+                对参数进行Md5和hash运算，得到hash值，再去treeMap中查找invoker
+                
+    dubbo支持的协议：
+        1、dubbo
+            默认协议，单一长连接、NIO异步通讯、tcp协议、hessian二进制序列化
+            适用小数据量、高并发的场景，以及消费者数量远大于提供者数量的场景；
+            不适用大数据量服务，比如传文件、视频等
+        2、RMI
+            阻塞式短连接、同步传输、tcp协议、JDK序列化
+        3、hessian
+            短连接、同步传输、http协议、hessian二进制序列化
+            适用传输数据包大、提供者数量比消费者数据量多
+        4、http
+            短连接、同步传输、json序列化
+        5、redis
+        6、webservice
+            短连接、同步传输、http协议、soap序列化
+        
+    短连接、长连接：
+        短连接：建立socket连接后，发送接受完数据后马上断开连接
+        长连接：基于tcp通讯，一直保持连接，不管是否发送接收数据
+        
+    dubbo心跳机制：
+        dubbo的心跳是双向心跳，客户端会给服务端发送心跳，反之，服务端也会向客户端发送心跳。
+        心跳定时器：HeartbeatTimerTask,默认心跳间隔时间60s
+        接收的一方更新 lastRead 字段，发送的一方更新 lastWrite 字段，最后读或写的时间超过心跳间隙的时间，便发送心跳请求给对端
+        重连、断连定时器：ReconnectTimerTask/CloseTimerTask
+        最后一次读或写的时间大于心跳超时时间（默认是心跳间隔时间的3倍，跟重试次数有关），客户端会重连，服务端会断开
+        
+    dubbo内置服务容器
+        1、Spring Container
+        2、Jetty Container
+        3、Log4j Container
+        
+    dubbo集群容错方案
+        1、Failover Cluster   默认配置。失败自动切换，自动重试其他服务器
+        2、Failfast Cluster   快速失败，立即报错，只发起一次调用
+        3、Failsafe Cluster   失败安全，出现异常时，直接忽略
+        4、Failback Cluster   失败自动恢复，记录失败请求，定时重发
+        5、Forking Cluster    并行调用多个服务器，只要一个成功立即返回
+        6、Broadcast Cluster  广播逐个调用所有提供者，任意一个报错则报错 
+    
+    dubbo的spi机制：
+    
+    dubbo和springCoud比较
+        
+        
+rocketMq
+        
+    rocketmq的路由中心：nameServer。nameServer保存broker的全部信息
+    
+    rocketmq事务机制：
+        事务消息只跟生产者有关，跟消费者无关
+        生产者发送事务消息：
+            1、producer发送half消息（half消息不会被消费者消费）
+            2、broker回复half消息
+            3、producer执行本地事务
+            4、producer返回本地事务状态，包括回滚、提交、未知。broker会将回滚状态的消息直接丢弃
+            5、如果事务状态未知，broker回查未知状态的事务
+            6、producer检查本地事务状态
+            7、producer回复本地事务状态
+            ...重复5、6、7步骤。最大回查次数默认15次
+            
+    rocketmq底层存储优化：
+        1、顺序写
+        2、异步刷盘
+            数据先存储到os cache中，再异步刷到磁盘。吞吐量高，但可能丢数据
+        3、零拷贝
+                
+    mq如何保证高可用？
+    
+    mq如何防止重复消费？
+        1、rocketmq每条消息有messageId，可以做唯一校验
+        2、业务上实现幂等        
+    
+    mq如果保证顺序消费？
+        生产者：
+            1、业务上保证顺序发送
+            2、rocketmq自带了发送方法，将唯一业务值作为hashKey，可以实现相同的业务数据发送到相同的队列上
+        消费者：
+            rocketmq提供了顺序消费模式
+    
+    mq发送端消息推送失败怎么办？
+    
+    mq如何防止消息不丢失？
+        生产者发送丢失：
+            1、同步发送+失败多次重试
+            2、使用rocketmq提供的事务机制
+        broker持久化丢失（消息先写入os cache，再写入磁盘）：
+            1、os cache异步刷盘改为同步刷盘
+            2、使用mq集群，主从消息备份。防止磁盘损坏
+                普通集群：异步复制改为同步复制
+                dlegger：会进行leader选举。设置follower全部同步完后，leader才会commit
+        消费者：
+            1、手动提交消息，消费者本地消费成功后，才返回成功
+        
+
+canal 工作原理
+
+    1、canal 模拟 MySQL slave 的交互协议，伪装自己为 MySQL slave ，向 MySQL master 发送dump 协议
+    2、MySQL master 收到 dump 请求，开始推送 binary log 给 slave (即 canal )
+    3、canal 解析 binary log 对象(原始为 byte 流)
