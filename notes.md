@@ -772,6 +772,9 @@ dubbo
         5、redis
         6、webservice
             短连接、同步传输、http协议、soap序列化
+            
+    dubbo支持的通讯框架：
+        1、netty
         
     短连接、长连接：
         短连接：建立socket连接后，发送接受完数据后马上断开连接
@@ -796,6 +799,24 @@ dubbo
         4、Failback Cluster   失败自动恢复，记录失败请求，定时重发
         5、Forking Cluster    并行调用多个服务器，只要一个成功立即返回
         6、Broadcast Cluster  广播逐个调用所有提供者，任意一个报错则报错 
+        
+    dubbo服务降级：
+    
+    dubbo节点角色：
+    
+    dubbo服务注册和发现流程：
+    dubbo服务暴漏的过程：
+    有多个同名服务，怎么连接指定服务？
+    dubbo服务上线怎么支持旧版本？
+    dubbo一个服务接口有多种实现，怎么区分？
+    dubbo可以对结果进行缓存吗？
+    dubbo支持哪几种结果缓存类型？
+    dubbo服务之间的调用是阻塞的吗？
+    dubbo如何优雅的停机？
+    dubbo服务调用链过长怎么解决？
+    dubbo服务读写容错策略怎么做？
+    dubbo管理控制台能做什么？
+    
     
     dubbo的spi机制：
     
