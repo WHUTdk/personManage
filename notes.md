@@ -5,10 +5,10 @@ spring bean生命周期
     3.实例化Bean对象 new Object()
     4.设置对象属性
     5.检查是否实现Aware接口，实现Aware接口的Bean能感知自身相关属性（spring会给Bean设置相关参数比如BeanName）
-    6.执行BeanPostProcessor前置处理
+    6.执行BeanPostProcessor的before方法：postProcessBeforeInitialization
     7.检查是否实现InitializingBean接口，以决定是否调用afterPropertiesSet方法
     8.检查是否配置自定义的init-method方法
-    9.执行BeanPostProcessor后置处理
+    9.执行BeanPostProcessor的after方法postProcessAfterInitialization
     10.注册必要的Destrucuion相关回调接口
     11.使用中...
     12.检查是否实现DisposableBean接口，执行destroy方法
@@ -28,7 +28,7 @@ BeanFactory、ApplicationContext、FactoryBean区别
     三个都是接口
     BeanFactory:spring底层的简单接口，提供基础方法，比如getBean()
     ApplicationContext:继承了BeanFactory和一些其他接口，spring的高级容器，对应实现的接口提供的功能更多
-    FactoryBean:生产Bean的工厂，实现该接口可自定义实例化并注册Bean到spring容器中
+    FactoryBean:生产Bean的工厂，实现该接口可自定义实例化并注册Bean到spring容器中。内部getObeject()方法返回的是自定义对象
 
 spring循环依赖和三级缓存
 
@@ -81,6 +81,22 @@ spring事务失效场景
     5、事务指定异常了，抛出的异常非指定的异常
     6、异常被catch捕捉
 
+AOP实现原理
+
+    核心类AbstractAutoProxyCreator，实现了BeanPostProcessor接口，postProcessAfterInitialization方法中执行了代理逻辑
+
+    在bean初始化中的BeanPostProcessor的postProcessAfterInitialization方法中，判断是否需要AOP，
+    需要的话，执行代理逻辑，使用JDK（基于接口）或cglib（基于父类）实现动态代理。
+    进入代理拦截逻辑invoke方法中,先获取切面的通知调用链集合，如果没有通知，则直接用原始对象执行方法，
+    如果有通知，创建一个调用链对象CglibMethodInvocation，遍历递归执行proceed方法，递归执行所有通知拦截方法，最后执行目标实际方法。目标方法执行完后，递归返回。
+    因为around前置和before通知的逻辑在实际方法之前（proceed方法之前），after通知的逻辑在实际方法之后，所以经过递归执行后，
+    实际的逻辑执行顺序：around前置逻辑->before逻辑->实际proceed方法->after逻辑->afterreturning逻辑->around后置逻辑
+    
+    通知的实际逻辑执行顺序(责任链模式)：
+        spring4.0：
+        around-before-afterthrowing（有异常的话）/afterreturning-after-around
+        spring5.28：
+        around-before-after-afterthrowing（有异常的话）/afterreturning-around
 
 类加载器、加载机制、加载过程
         
