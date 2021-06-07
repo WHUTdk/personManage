@@ -1,14 +1,57 @@
+hashMap的数组大小为什么是2的幂次方？
+
+    hashMap数组下标的计算规则：(tab.length - 1) & hash
+    数组长度是2的幂次方的数字，减一，转为二进制后，与hash值的二进制数做与运算，
+    与运算，两个为1结果才为1，所以与运算的最终结果肯定在 0~（tab.length - 1）的范围内，这样就使得计算的数组下标不会越界。
+    使用2的幂次方数，与运算的结果更加均匀，减少hash碰撞
+          
+JDK1.7的hashMap链表头插法死循环问题
+
+    假设map数组中有个A->B的链表（A是头节点指向B），线程1插入元素后数组进行扩容，创建一个新数组，旧数据还未迁移，
+    线程2开始执行，进行数据迁移操作，先插入A元素，然后插入B元素，因为是头插法，此时新数据中，B为头节点指向A。
+    线程2执行完后，线程1开始执行，此时存在A指向B，B又指向A的情况，造成环形链表
+    如果后续对该位置进行get操作，遍历链表会进入死循环
+
+HashMap链表转红黑树的阈值为什么是8？
+    
+    源码注释中介绍，根据泊松分布，链表长度超过8的机率很小
+    链表长度达到8时，其实先会去判断当前数组长度是否小于64，小于的话会扩容数组，不小于64才会转为红黑树
+    
+hashMap红黑树转链表的阈值为什么是6？
+
+    防止频繁增删元素，造成链表和红黑树的频繁转换
+    
+hashMap加载因子为什么是0.75？
+
+    大量统计计算，空间与时间的结合
+    
+HashMap并发问题
+
+    1.7并发扩容时，造成链表死循环
+    1.7数据丢失
+    1.8会产生数据覆盖问题、数据丢失
+        数据覆盖：后一个线程数据被前一个线程覆盖
+        数据丢失：多线程同时执行p.next = newNode(hash, key, value, null);两个线程都获取到p.next，执行完后，有一个数据会被丢失
+    
+
+谈谈对spring的理解：
+
+    spring是一个框架，帮我们起到了一个IOC容器的作用，用来承载我们整体的Bean对象，他帮我们进行了整个对象从创建到销毁的整个生命周期的管理。
+    我们在使用spring的时候，可以使用配置文件，也可以使用注解的方式来进行相关实现。启动spring应用时，spring会将我们定义的bean对象转换为
+    beanDefinetion，然后完成beandefinition的解析和加载过程，之后再对bean进行实例化和一系列初始化操作，包括aware、beanPostProcessor等接口实现，
+    还有AOP等操作。整个对象完成初始化后，就会放入单例池，容器能直接使用对象了。
+
 spring bean生命周期
 
     1.扫描类得到BeanDefinition(BeanClass、scope、dependOn、initMethodName、propertyValues...)
     2.BeanFactoryPostProcessor(处理BeanDefinition，可以获取相关属性，并且可以设置修改BeanClass)
     3.实例化Bean对象 new Object()
     4.设置对象属性
-    5.检查是否实现Aware接口，实现Aware接口的Bean能感知自身相关属性（spring会给Bean设置相关参数比如BeanName）
+    5.检查是否实现Aware接口，实现Aware接口的Bean能获取自身相关属性或获取容器相关属性（BeanName、BeanFactory等）
     6.执行BeanPostProcessor的before方法：postProcessBeforeInitialization
     7.检查是否实现InitializingBean接口，以决定是否调用afterPropertiesSet方法
     8.检查是否配置自定义的init-method方法
-    9.执行BeanPostProcessor的after方法postProcessAfterInitialization
+    9.执行BeanPostProcessor的after方法：postProcessAfterInitialization
     10.注册必要的Destrucuion相关回调接口
     11.使用中...
     12.检查是否实现DisposableBean接口，执行destroy方法
@@ -58,6 +101,16 @@ spring循环依赖和三级缓存
 
 spring事务原理
 
+    spring事务首先要基于数据库引擎的事务实现。分为编程式事务和声明式事务。
+    编程式事务：通过TransactionTemplate或TransactionManager手动管理事务，实际很少使用
+    声明式事务：通过AOP实现
+    spring事务主要包含五个属性来管理事务：
+        1、隔离级别
+        2、传播行为
+        3、回滚规则（可以指定回滚异常）
+        4、是否只读
+        5、事务超时
+
 spring事务的传播机制
 
     （1）死活不要事务的
@@ -74,12 +127,12 @@ spring事务的传播机制
 spring事务失效场景
     
     spring事务的实现原理是AOP，事务失效的根本原因是AOP不起作用。
-    1、发生自调用，类里面使用this调用方法，此时的this不是代理对象而是类对象本身，事务不会生效
-    2、方法不是public的
-    3、数据库存储引擎不支持事务
-    4、事务未被spring管理
-    5、事务指定异常了，抛出的异常非指定的异常
-    6、异常被catch捕捉
+        1、发生自调用，类里面使用this调用方法，此时的this不是代理对象而是类对象本身，事务不会生效
+        2、方法不是public的
+        3、数据库存储引擎不支持事务
+        4、事务未被spring管理
+        5、事务指定异常了，抛出的异常非指定的异常
+        6、异常被catch捕捉
 
 AOP实现原理
 
@@ -88,9 +141,10 @@ AOP实现原理
     在bean初始化中的BeanPostProcessor的postProcessAfterInitialization方法中，判断是否需要AOP，
     需要的话，执行代理逻辑，使用JDK（基于接口）或cglib（基于父类）实现动态代理。
     进入代理拦截逻辑invoke方法中,先获取切面的通知调用链集合，如果没有通知，则直接用原始对象执行方法，
-    如果有通知，创建一个调用链对象CglibMethodInvocation，遍历递归执行proceed方法，递归执行所有通知拦截方法，最后执行目标实际方法。目标方法执行完后，递归返回。
-    因为around前置和before通知的逻辑在实际方法之前（proceed方法之前），after通知的逻辑在实际方法之后，所以经过递归执行后，
-    实际的逻辑执行顺序：around前置逻辑->before逻辑->实际proceed方法->after逻辑->afterreturning逻辑->around后置逻辑
+    如果有通知，创建一个调用链对象CglibMethodInvocation，执行proceed方法，通知调用链遍历执行invoke方法，invoke方法又递归执行proceed方法，
+    递归到最后，执行目标实际方法。目标方法执行完后，递归返回。
+    因为around前置和before通知的逻辑在实际方法之前，after通知的逻辑在实际方法之后，所以经过递归执行后，
+    实际的逻辑执行顺序：around前置逻辑->before逻辑->实际方法->after逻辑->afterreturning逻辑->around后置逻辑
     
     通知的实际逻辑执行顺序(责任链模式)：
         spring4.0：
@@ -198,18 +252,39 @@ cpu占用过高问题定位
 
 
 springboot自动配置原理
-
+         
+    SpringApplication.run(StartApplication.class, args)
+    1、new SpringApplication(primarySources)
+        执行启动类构造方法，构造方法内部会获取当前应用的主类mainApplicationClass
+    2、执行SpringApplication对象的run方法，run方法内部会设置相关属性值，相当于准备工作，包括设置启动开始时间、设置上下文对象、设置异常报告器、设置环境对象，打印banner等
+    3、prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+        给应用程序上下文设置具体的值，包括环境对象，监听器初始化参数、创建对象工厂等
+    4、Set<Object> sources = getAllSources(); 
+        获取xml或注解形式的配置类，包含应用的主类
+    5、load(context, sources.toArray(new Object[0]));         
+    6、loader.load();
+        加载资源文件，判断主类是否有component注解
+    7、annotatedReader.register(source);
+        注册主类，加载主类到容器中
+    8、执行spring的refresh()流程，其中包括执行BeanFactoryPostProcessor
+        内部会执行ConfigurationClassPostProcessor类的方法，之后会解析包含@Configuration注解的类，
+        解析pringboot应用的主类，依次判断解析主类上的所有注解，比如@componentScan、@PropertiesSource、@Import等
+        启动类上@Import注解引入的类有：AutoConfigurationImportSelector.class、AutoConfigurationPackages.Registrar.class
+    9、执行@Import注解引入类的处理逻辑
+    
     @SpringBootApplication注解：
-        @SpringBootConfiguration
-        @ComponentScan
-        @EnableAutoConfiguration
-            @AutoConfigurationPackage：获取启动类所在包路径，作为自动配置扫描包
-            @Import(AutoConfigurationImportSelector.class):
-                1.加载spring-autoconfigure-metadata.properties下所有配置信息,主要是配置类对应过滤条件的相关信息
-                    （ 根据官网说法，使用这种配置方式可以有效的降低SpringBoot的启动时间，因为通过这种过滤方式能减少@Configuration类的数量，从而降低初始化Bean时的耗时）
-                2.加载spring.factories下所有自动配置类
-                3.过滤，去除不合格的配置类
-                4.各个组件配置类，通过properties文件，加载配置信息
+           @SpringBootConfiguration
+           @ComponentScan
+           @EnableAutoConfiguration
+               @AutoConfigurationPackage：获取启动类所在包路径，作为自动配置扫描包
+               @Import(AutoConfigurationImportSelector.class):               
+                   AutoConfigurationImportSelector内部主要逻辑：
+                   1.加载spring-autoconfigure-metadata.properties下所有配置信息,主要是配置类对应过滤条件的相关信息
+                       （ 根据官网说法，使用这种配置方式可以有效的降低SpringBoot的启动时间，因为通过这种过滤方式能减少@Configuration类的数量，从而降低初始化Bean时的耗时）
+                   2.加载spring.factories下所有自动配置类（文件中EnableAutoConfiguration= 后的所有类）
+                   3.去重、排除、过滤，去除不合格的配置类
+                   4.各个组件配置类，通过项目的properties/yml文件，加载配置信息
+           
 
 springboot原生注解
 
@@ -246,6 +321,10 @@ springboot jar为什么能直接运行？
     启动jar时，会执行JarLauncher的main方法，接着调用自身的launch方法，该方法内部会先获取JarFileArchive集合，
     然后根据JarFileArchive集合创建类加载器LaunchedURLClassLoader
     之后会另起一个线程执行Start-Class指向的自定义的main方法，该main方法执行后，会构造spring容器和启动内置servlet容器等过程
+
+自定义springboot-stater
+
+    
 
 redis数据结构
 
@@ -652,6 +731,7 @@ Mysql
     搜索引擎：
         1、innodb：支持事务；提供行级锁和外键约束；使用聚集索引；适合大数据量
         2、Myisam：不支持事务；不提供行级锁和外键约束；使用非聚集索引；适合小数据量，查询多修改少的情况
+        
     索引：
         1、聚集索引：使用B+树索引结构，非叶子节点为索引值，叶子节点包含索引值和完整的数据记录；
         2、非聚集索引：使用B+树索引结构，非叶子节点为索引值，叶子节点包含索引值和索引指向的数据地址；
@@ -659,10 +739,12 @@ Mysql
         B树每个非叶子节点包含索引值和数据记录，B+树非叶子节点只包含索引值，使用B+树，保证每个非叶子节点能够存储的索引值更多（默认16kb）,能够降低索引树的高度；
         B树上下层级节点没有冗余索引，查询数据需要遍历上下层级。B+树每个节点首位索引值冗余了上一级节点的索引，B+树的叶子节点包含了所有索引值，查询直接遍历叶子节点就行；
         B树叶子节点的之间没有双向指针，B+树叶子节点之间有双向指针，B+树叶子节点所有索引值天然排序；
+        
     为什么很少用Hash索引：
         hash索引使用类似hash表的结构，数组+链表，不支持范围查询
     为什么不使用二叉树：
         B+树每个节点包含更多的索引值，一次性能够加载更多的数据，减少磁盘IO，而且能够降低树的高度，减少查询次数和复杂度；
+        
     回表：
         普通索引（非主键索引）：先扫描普通索引树定位主键值，再扫描主键索引树定位行记录。
     覆盖索引：
@@ -698,14 +780,17 @@ Mysql
         
     redo log：
         数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件，保证事务持久性）
-        redo log采用WAL预写式日志，分为prepare和commit两个阶段，更新数据写入到redo log后处于prepare状态，再告知执行器执行完成，随时可以提交事务
-        默认有两个文件 logfile0  logfile1  每个默认48M。持久化策略可配置，默认是事务提交后，脏页数据同步持久化到redo log file中
+        redo log采用WAL预写式日志，分为prepare和commit两个阶段，更新数据写入到redo log内存后处于prepare状态，再告知执行器执行完成，随时可以提交事务
+        默认有两个文件 logfile0  logfile1  每个默认48M，循环写入。持久化策略可配置，默认是事务提交后，脏页数据同步持久化到redo log file中
         write position
         check point
     double write buffer:
         触发check point后，会将buffer pool中的脏数据刷入磁盘，该过程根据双写机制，保证脏数据能够可靠的刷盘。
+        
     undo log：
         作用：1、回滚；2、mvcc
+        undo log是逻辑日志，可以理解为：将对应的写操作记录一条相反操作的日志
+            
         
     mysql主从复制过程：
         1、主节点 bin log dump线程
@@ -768,7 +853,7 @@ dubbo
                 3、将本次使用的invoker权重置为最低，以便下次不会再使用
         3、LeastActive，最少活跃数，选择上一次请求耗时最短的服务器
             实现原理：
-                没接收到一个请求，活跃数+1，请求结束活跃数-1。leastActive：最小活跃数  leastCount：是最小活跃数的invoker个数
+                每接收到一个请求，活跃数+1，请求结束活跃数-1。leastActive：最小活跃数  leastCount：是最小活跃数的invoker个数
                 1、获取invoker的活跃数
                 2、如果有多个invoker都是最小活跃数，就判断权重是否相同
                 3、如果只有一个invoker是最小活跃数，直接返回
@@ -814,35 +899,85 @@ dubbo
         3、Log4j Container
         
     dubbo集群容错方案
-        1、Failover Cluster   默认配置。失败自动切换，自动重试其他服务器
-        2、Failfast Cluster   快速失败，立即报错，只发起一次调用
-        3、Failsafe Cluster   失败安全，出现异常时，直接忽略
-        4、Failback Cluster   失败自动恢复，记录失败请求，定时重发
-        5、Forking Cluster    并行调用多个服务器，只要一个成功立即返回
-        6、Broadcast Cluster  广播逐个调用所有提供者，任意一个报错则报错 
+        1、Failover   默认配置。失败自动切换，自动重试其他服务器
+        2、Failfast   快速失败，立即报错，只发起一次调用
+        3、Failsafe   失败安全，出现异常时，直接忽略
+        4、Failback   失败自动恢复，记录失败请求，定时重发
+        5、Forking    并行调用多个服务器，只要一个成功立即返回
+        6、Broadcast  广播逐个调用所有提供者，任意一个报错则报错 
         
     dubbo服务降级：
-    
+        配置mock属性，可以实现服务降级
+        
     dubbo节点角色：
+        1、provider：服务提供方
+        2、consumer：服务消费方
+        3、registry：服务发现和注册的注册中心
+        4、monitor：监控中心，可以统计服务调用次数和调用时间
+        5、container：服务运行容器
     
-    dubbo服务注册和发现流程：
-    dubbo服务暴漏的过程：
+    dubbo服务注册原理：
+        
+    
+    dubbo服务暴露的过程：
+        Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布 ContextRefreshEvent 事件的时候，
+        通知实现了 ApplicationListener 的 ServiceBean 类进行回调 onApplicationEvent 事件方法，
+        Dubbo 会在这个方法中调用 ServiceBean 父类 ServiceConfig 的 export 方法，而该方法真正实现了服务的（异步或者非异步）发布。
+        
+    dubbo服务调用原理：
+    
+    
     有多个同名服务，怎么连接指定服务？
-    dubbo服务上线怎么支持旧版本？
-    dubbo一个服务接口有多种实现，怎么区分？
-    dubbo可以对结果进行缓存吗？
-    dubbo支持哪几种结果缓存类型？
-    dubbo服务之间的调用是阻塞的吗？
-    dubbo如何优雅的停机？
-    dubbo服务调用链过长怎么解决？
-    dubbo服务读写容错策略怎么做？
-    dubbo管理控制台能做什么？
+        可以配置环境点对点直连，绕过注册中心，将以服务接口为单位，忽略注册中心的提供者列表。
     
+    dubbo服务上线怎么支持旧版本？
+        可以用版本号（version）过渡，多个不同版本的服务注册到注册中心，版本号不同的服务相互间不引用。这个和服务分组的概念有一点类似。
+    
+    dubbo一个服务接口有多种实现，怎么区分？
+        可以使用group属性来分组，服务提供防和消费放都指定同一个服务
+        
+    dubbo可以对结果进行缓存吗？
+        可以，dubbo提供了声明式缓存，用于加速热门数据的访问数据
+    
+    dubbo支持哪几种结果缓存类型？
+        1、lru
+        2、threadLocal
+        3、jchace
+    
+    dubbo服务之间的调用是阻塞的吗？
+        默认是同步等待结果阻塞的，支持异步调用
+        dubbo是基于NIO的非阻塞实现并行调用，客户端不需要启动多线程即可并行调用多个远程服务，相对多线程开销较小，异步调用会返回一个future对象
+        
+    dubbo如何优雅的停机？
+        通过JDK的ShutdownHook完成优雅停机
+    
+    dubbo服务调用链过长怎么解决？
+        可以使用Pinpoint、Zipkin和apache Skywalking等实现分布式服务追踪
+    
+    dubbo服务读写容错策略怎么做？
+        读操作使用failover，失败进行切换重试
+        写操作使用failfast快速失败    
     
     dubbo的spi机制：
-    
+        SPI的本质是将接口的实现类的全限定类名配置在文件中，并由服务加载器读取配置文件，加载实现类。
+        这样可以在运行中，动态地为接口替换实现类。不过Java SPI不支持AOP和IOC，也不能单独获取某个指定的实现类
+        Dubbo就是通过SPI机制加载所有的组件，不过dubbo并未使用Java原生的SPI机制，而是对其进行了增强（支持AOP和IOC），使其能够更好的满足需求。
+        dubbo SPI加载文件的路径和顺序：
+            1、META-INF/dubbo/internal
+            2、META-INF/dubbo/
+            3、META-INF/services/
+        
     dubbo和springCoud比较
         
+zookeeper
+
+    启动时选举流程
+    
+    重新选举流程
+    
+    怎么保证强一致性
+    
+    ZAB协议
         
 rocketMq
         
