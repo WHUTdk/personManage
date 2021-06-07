@@ -774,14 +774,14 @@ Mysql
         串行化：
     ACID：
         A：atomivity 原子性，事务要么成功，要么失败，失败的话数据会回滚。undo log可以保证原子性
-        C： consistency一致性，其他三个特性保证了最终一致性
-        I： isolation 隔离性。锁（写-写操作）和mvcc（写-读操作）实现隔离性
-        D： durability 持久性，即使数据库宕机，也不会丢失已提交的事务。redo log可以保证持久性
+        C：consistency一致性，其他三个特性保证了最终一致性
+        I：isolation 隔离性。锁（写-写操作）和mvcc（写-读操作）实现隔离性
+        D：durability 持久性，即使数据库宕机，也不会丢失已提交的事务。redo log可以保证持久性
         
     redo log：
         数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件，保证事务持久性）
         redo log采用WAL预写式日志，分为prepare和commit两个阶段，更新数据写入到redo log内存后处于prepare状态，再告知执行器执行完成，随时可以提交事务
-        默认有两个文件 logfile0  logfile1  每个默认48M，循环写入。持久化策略可配置，默认是事务提交后，脏页数据同步持久化到redo log file中
+        默认有两个文件 logfile0  logfile1  每个默认48M，循环写入。持久化策略可配置，默认是事务提交后，脏页数据同步从内存持久化到redo log file中
         write position
         check point
     double write buffer:
