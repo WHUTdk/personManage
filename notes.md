@@ -3,7 +3,7 @@ hashMap的数组大小为什么是2的幂次方？
     hashMap数组下标的计算规则：(tab.length - 1) & hash
     数组长度是2的幂次方的数字，减一，转为二进制后，与hash值的二进制数做与运算，
     与运算，两个为1结果才为1，所以与运算的最终结果肯定在 0~（tab.length - 1）的范围内，这样就使得计算的数组下标不会越界。
-    使用2的幂次方数，与运算的结果更加均匀，减少hash碰撞
+    使用2的幂次方数，与运算的结果更加均匀，减少hash碰撞。可以取代取模运算
           
 JDK1.7的hashMap链表头插法死循环问题
 
@@ -19,7 +19,7 @@ HashMap链表转红黑树的阈值为什么是8？
     
 hashMap红黑树转链表的阈值为什么是6？
 
-    防止频繁增删元素，造成链表和红黑树的频繁转换
+    防止临界时频繁增删元素，造成链表和红黑树的频繁转换
     
 hashMap加载因子为什么是0.75？
 
@@ -29,10 +29,15 @@ HashMap并发问题
 
     1.7并发扩容时，造成链表死循环
     1.7数据丢失
-    1.8会产生数据覆盖问题、数据丢失
-        数据覆盖：后一个线程数据被前一个线程覆盖
-        数据丢失：多线程同时执行p.next = newNode(hash, key, value, null);两个线程都获取到p.next，执行完后，有一个数据会被丢失
+    1.8会产生数据丢失
+        数据丢失：比如多线程同时执行p.next = newNode(hash, key, value, null);两个线程都获取到p.next，执行完后，有一个数据会被丢失
     
+concurrentHashMap
+
+    1.7
+    1.8
+        初始化使用cas
+        put时数组元素为空，使用cas自旋插入，数组元素不为空，使用synchronied锁住链表头节点
 
 谈谈对spring的理解：
 
@@ -43,19 +48,20 @@ HashMap并发问题
 
 spring bean生命周期
 
-    1.扫描类得到BeanDefinition(BeanClass、scope、dependOn、initMethodName、propertyValues...)
-    2.BeanFactoryPostProcessor(处理BeanDefinition，可以获取相关属性，并且可以设置修改BeanClass)
-    3.实例化Bean对象 new Object()
-    4.设置对象属性
-    5.检查是否实现Aware接口，实现Aware接口的Bean能获取自身相关属性或获取容器相关属性（BeanName、BeanFactory等）
-    6.执行BeanPostProcessor的before方法：postProcessBeforeInitialization
-    7.检查是否实现InitializingBean接口，以决定是否调用afterPropertiesSet方法
-    8.检查是否配置自定义的init-method方法
-    9.执行BeanPostProcessor的after方法：postProcessAfterInitialization
-    10.注册必要的Destrucuion相关回调接口
-    11.使用中...
-    12.检查是否实现DisposableBean接口，执行destroy方法
-    13.检查是否配置自定义销毁方法，有的话执行
+    1、创建BeanFactory容器
+    2.扫描加载配置文件或配置类，得到BeanDefinition(BeanClass、scope、dependOn、initMethodName、propertyValues...)
+    3.BeanFactoryPostProcessor(处理BeanDefinition，可以获取相关属性，并且可以设置修改BeanClass)
+    4.实例化Bean对象 new Object()
+    5.设置对象属性
+    6.检查是否实现Aware接口，实现Aware接口的Bean能获取自身相关属性或获取容器相关属性（BeanName、BeanFactory等）
+    7.执行BeanPostProcessor的before方法：postProcessBeforeInitialization
+    8.检查是否实现InitializingBean接口，以决定是否调用afterPropertiesSet方法
+    9.检查是否配置自定义的init-method方法
+    10.执行BeanPostProcessor的after方法：postProcessAfterInitialization
+    11.注册必要的Destrucuion相关回调接口
+    12.使用中...
+    13.检查是否实现DisposableBean接口，执行destroy方法
+    14.检查是否配置自定义销毁方法，有的话执行
 
 @Import、@Component、@Bean区别
     
@@ -71,7 +77,7 @@ BeanFactory、ApplicationContext、FactoryBean区别
     三个都是接口
     BeanFactory:spring底层的简单接口，提供基础方法，比如getBean()
     ApplicationContext:继承了BeanFactory和一些其他接口，spring的高级容器，对应实现的接口提供的功能更多
-    FactoryBean:生产Bean的工厂，实现该接口可自定义实例化并注册Bean到spring容器中。内部getObeject()方法返回的是自定义对象
+    FactoryBean:实现该接口可定制Bean到spring容器中。内部getObeject()方法返回的是自定义对象，如果要返回FactoryBean对象，使用&BeanName
 
 spring循环依赖和三级缓存
 
@@ -95,7 +101,7 @@ spring循环依赖和三级缓存
     会提前AOP将代理对象放入第二级缓存中，然后删除第三级缓存。
         当然也可以这样设计，在原始对象生成后立即生成代理对象，缓存中不放原始对象，
     直接将代理对象放入缓存中，这样也只使用了二级缓存就解决了。这种设计不管是否有循环依赖，都会提前提前进行了AOP，
-    违背了AOP的设计原则，AOP一般发生在Bean的后置处理中，不直接参与Bean的初始化流程。
+    违背了AOP的设计原则，AOP一般发生在Bean的后置处理中，不提前参与Bean的初始化流程。
     spring只有在发生循环依赖时，才会提前进行AOP，在属性设置期间，将代理对象放入第二级缓存中，让其他Bean完成初始化。
    
 
@@ -103,7 +109,7 @@ spring事务原理
 
     spring事务首先要基于数据库引擎的事务实现。分为编程式事务和声明式事务。
     编程式事务：通过TransactionTemplate或TransactionManager手动管理事务，实际很少使用
-    声明式事务：通过AOP实现
+    声明式事务：通过注解+AOP实现
     spring事务主要包含五个属性来管理事务：
         1、隔离级别
         2、传播行为
@@ -138,7 +144,7 @@ AOP实现原理
 
     核心类AbstractAutoProxyCreator，实现了BeanPostProcessor接口，postProcessAfterInitialization方法中执行了代理逻辑
 
-    在bean初始化中的BeanPostProcessor的postProcessAfterInitialization方法中，判断是否需要AOP，
+    在bean初始化中的BeanPostProcessor接口实现的postProcessAfterInitialization方法中，判断是否需要AOP，
     需要的话，执行代理逻辑，使用JDK（基于接口）或cglib（基于父类）实现动态代理。
     进入代理拦截逻辑invoke方法中,先获取切面的通知调用链集合，如果没有通知，则直接用原始对象执行方法，
     如果有通知，创建一个调用链对象CglibMethodInvocation，执行proceed方法，通知调用链遍历执行invoke方法，invoke方法又递归执行proceed方法，
@@ -251,26 +257,32 @@ cpu占用过高问题定位
     4.使用jstack pid 展示进程下所有线程详细情况，对比nid与上一步tid十六进制的值，找到占用cpu高的线程详细情况
 
 
-springboot自动配置原理
+springboot启动过程、自动配置原理
          
     SpringApplication.run(StartApplication.class, args)
     1、new SpringApplication(primarySources)
-        执行启动类构造方法，构造方法内部会获取当前应用的主类mainApplicationClass
-    2、执行SpringApplication对象的run方法，run方法内部会设置相关属性值，相当于准备工作，包括设置启动开始时间、设置上下文对象、设置异常报告器、设置环境对象，打印banner等
+        执行启动类构造方法，构造方法内部会获取当前应用的主类mainApplicationClass、设置web应用类型（servlet）、从spring.factories文件加载初始化类和监听器类（只是全限定类名）
+    2、执行SpringApplication对象的run方法，run方法内部会设置相关属性值，相当于准备工作，包括启动监听器、设置启动计时、设置上下文对象、设置异常报告器、设置环境对象，打印banner等
     3、prepareContext(context, environment, listeners, applicationArguments, printedBanner);
-        给应用程序上下文设置具体的值，包括环境对象，监听器初始化参数、创建对象工厂等
+        给应用程序上下文对象设置具体的值，包括环境对象，触发监听器、初始化参数、创建对象工厂等
     4、Set<Object> sources = getAllSources(); 
-        获取xml或注解形式的配置类，包含应用的主类
+        获取资源文件，包含应用的主类
     5、load(context, sources.toArray(new Object[0]));         
     6、loader.load();
-        加载资源文件，判断主类是否有component注解
+        加载资源文件，判断主类是否有component注解，有的话执行下一步
     7、annotatedReader.register(source);
-        注册主类，加载主类到容器中
-    8、执行spring的refresh()流程，其中包括执行BeanFactoryPostProcessor
-        内部会执行ConfigurationClassPostProcessor类的方法，之后会解析包含@Configuration注解的类，
-        解析pringboot应用的主类，依次判断解析主类上的所有注解，比如@componentScan、@PropertiesSource、@Import等
+        注册主类到容器中
+    8、refreshContext(context)，内部执行spring的refresh()，bean的初始化和自动装配就是在此方法内完成
+        其中包括执行invokeBeanFactoryPostProcessor,内部会完成bean的实例化
+        内部会使用ConfigurationClassPostProcessor类来解析包含@Configuration注解的类，
+        解析springboot应用的主类，依次判断解析主类上的所有注解，比如@componentScan、@PropertiesSource、@Import等
         启动类上@Import注解引入的类有：AutoConfigurationImportSelector.class、AutoConfigurationPackages.Registrar.class
-    9、执行@Import注解引入类的处理逻辑
+    9、执行@Import注解引入类的处理逻辑（自动配置过程）
+        AutoConfigurationImportSelector，内部会执行importSelector类的getAutoConfigurationEntry()方法
+        
+    10、refresh()方法执行完后，记录启动结束时间和启动日志
+    11、监听器发布时间
+    12、callRunners(context, applicationArguments);真正启动springboot应用
     
     @SpringBootApplication注解：
            @SpringBootConfiguration
@@ -279,11 +291,9 @@ springboot自动配置原理
                @AutoConfigurationPackage：获取启动类所在包路径，作为自动配置扫描包
                @Import(AutoConfigurationImportSelector.class):               
                    AutoConfigurationImportSelector内部主要逻辑：
-                   1.加载spring-autoconfigure-metadata.properties下所有配置信息,主要是配置类对应过滤条件的相关信息
-                       （ 根据官网说法，使用这种配置方式可以有效的降低SpringBoot的启动时间，因为通过这种过滤方式能减少@Configuration类的数量，从而降低初始化Bean时的耗时）
-                   2.加载spring.factories下所有自动配置类（文件中EnableAutoConfiguration= 后的所有类）
-                   3.去重、排除、过滤，去除不合格的配置类
-                   4.各个组件配置类，通过项目的properties/yml文件，加载配置信息
+                   1.加载spring.factories下所有自动配置类（文件中EnableAutoConfiguration= 后的所有类）
+                   2.去重、排除、过滤，去除不合格的配置类
+                   3.通过监听事件，通知各个组件配置类，通过项目的properties/yml文件进行自动配置
            
 
 springboot原生注解
@@ -318,13 +328,18 @@ springboot jar为什么能直接运行？
             lib 第三方依赖jar包
         springboot loader相关类
     
-    启动jar时，会执行JarLauncher的main方法，接着调用自身的launch方法，该方法内部会先获取JarFileArchive集合，
+    启动jar时，会执行JarLauncher的main方法，接着调用自身的launch方法，该方法内部会先获取JarFileArchive（jar包文件档案）集合，
     然后根据JarFileArchive集合创建类加载器LaunchedURLClassLoader
     之后会另起一个线程执行Start-Class指向的自定义的main方法，该main方法执行后，会构造spring容器和启动内置servlet容器等过程
 
 自定义springboot-stater
 
-    
+    自定义jar包命名规则：xxx-spring-boot-stater
+    配置类加上@Configuration注解
+    具体自定义实现方法，有多种方式：
+        1、META-INF/spring.factories文件下放入配置类的全限定类名
+        2、启动类使用@Import注解，引入自定义配置类
+        3、自定义注解，@EnableXxx ,注解上加入@Import注解，引入配置类，启动类加上@EnableXxx注解
 
 redis数据结构
 
@@ -338,6 +353,10 @@ redis数据结构
         整数值集合intSet、hashTable
     4、zset
         压缩列表zipList、跳跃表和字典skipList
+            数据量小时使用压缩列表，达到阈值时转为跳跃表，
+                阈值设置：zset-max-ziplist-entires 128  元素超过128个
+                        zset-max-ziplist-value 64     单个元素值大于64byte
+            跳表：基于有序链表，分层冗余数据，改造成可以支持“折半查找”数据结构，可以快速的进行增删查数据
     5、Hash
         压缩列表zipList、hashTable
 
@@ -452,17 +471,31 @@ redis分布式锁要注意什么问题？
         redlock
     
 redisson
-
+    
+    RedissonLock.class
     运行原理：
         通过lua脚本加锁，同时启动看门狗异步任务，维护锁的超时时间。锁的value会加上线程id
-        通过发布订阅模式，通知其他线程当前锁的状态，其他线程循环尝试是否能加锁
         同一个线程，支持可重入锁，每次加锁，统计客户端的加锁次数+1，当加锁次数为0时，代表该锁可以被释放
         通过lua脚本释放锁，保证原子性
-        看门狗（watch dog）:定时任务，每隔（锁超时时间的1/3）秒，就会检查锁是否还存在，存在的话，就重新设置生存时间，默认设置超时时间30s
+        看门狗（watch dog）:定时任务，renewExpiration方法自身调用，每隔（锁超时时间的1/3）秒，就会检查锁是否还存在，存在的话，就重新设置生存时间，默认设置超时时间30s
         
     缺点：
         集群模式下，master挂掉后，锁未及时同步到新的master，其他线程可能又会获取到锁。可以用红锁解决redLock
-                
+        redlock：超过半数redis加锁成功才算成功
+        
+redis的线程模型
+
+    redis4.0之前使用单线程模型，基于epoll实现IO多路复用并发处理客户端请求
+    redis4.0之后，引入多线程，进行异步删除操作
+    IO多路复用：
+    传统的套接字读写操作时阻塞的，不支持并发，性能低
+    NIO设计思路：使用轮询策略，轮询是否有新连接和已有的连接是否有数据读写，当一个连接没有数据时，会轮询下一个连接，不会阻塞
+        redis的IO多路复用，将socket的轮询操作直接调用操作系统的函数（windows使用select()，linux使用epoll()方法），
+        操作系统进行读写操作，然后通知线程处理业务
+       
+IO、NIO、BIO
+       
+         
 线程的状态
 
     1.新建：新创建线程
@@ -603,17 +636,47 @@ volatile
             }).start();
         }  
         
-偏向锁、轻量级锁、重量级锁
+synchronized底层实现原理
 
-    synchronized同步锁自身的优化，当没有锁竞争时，会先获取偏向锁。如果有少量竞争，偏向锁
-    会升级为轻量级锁，竞争线程会启动自旋，如果自旋到达阈值仍然没有拿到锁，就会升级为重量级锁，
-    重量级锁会让竞争线程进入阻塞状态，直到持有锁的线程执行完唤醒它们。
+    底层锁信息存储在锁对象的对象头的mark word中，不同的锁状态对应不同的存储信息和锁标志位。
+    偏向锁：mark word存储的线程id
+    轻量级锁：mark word存储的指向栈中轻量级锁的指针
+    重量级锁：mark word存储指向堆中重量级锁的指针
+    
+    偏向锁本质上不是锁，轻量级锁本质上是线程的自旋
+    重量级锁才是传统意义上的锁，重量级锁指向堆中的monitor对象，monitor对象包含等待队列、持有锁的线程、waitSet，
+    新线程发现锁被占用时，会先进入等待队列，当锁被释放后，队列的元素会移动并唤醒队首线程。
+    如果持有锁的线程执行了wait()方法，该线程会进入waitSet集合中，如果被notify()方法唤醒，会进入等待队列中。
+    
+    synchronized修饰的代码块，编译成字节码文件，会生成对应的monitorenter和monitorexit指令，其中monitorexit指令会有两个，隐式在finally会执行，这样线程异常也能释放锁
+    synchronized修饰的方法，生成了ACCSYNCCHRONIED关键字
+    
+    monitor对象可以进行锁计数，实现可重入，持有锁的线程重入时，monitor计数+1，当计数为0时，其他线程可以竞争锁
+
+synchronized的偏向锁、轻量级锁、重量级锁
+
+    synchronized同步锁自身的优化，当没有锁竞争时，会先获取偏向锁（本质上不是锁，底层锁对象存储了线程id）。如果有少量竞争，偏向锁
+    会升级为轻量级锁，竞争线程会启动自旋，如果自旋到达阈值仍然没有拿到锁（自旋10次）或者竞争线程比较多（竞争线程数达到CPU核数的一半），
+    就会升级为重量级锁，重量级锁会让竞争线程进入等待阻塞状态，直到持有锁的线程执行完唤醒它们。
     
 cas乐观锁
-
+    
+    compareAndAwap    自旋，属于轻量级锁
     三个基本操作数：共享变量内存值、预期值、要修改的值
     先获取共享变量的内存值，赋值给临时变量作为预期值，更新数据时，比对内存值和预期值
     只有当共享变量内存值=预期值时，共享变量内存值才会更新为要修改的值
+    
+    cas必须具备原子性，否则依然会有并发问题（比如比较相等通过后，内存值又被修改）。
+        jdk的cas方法，底层使用native方法，使用c++方法，最底层使用汇编语言的lock cmpxchg指令来实现原子性
+    
+cas的ABA问题如何解决？
+
+    ABA问题：线程1读到内存值0，将0作为预期值，在比较之前，其他线程对内存值进行修改，比如0修改为1，然后将1又修改为0，
+    线程1此时再执行比较，发现内存值和预期值一样，于是执行后续操作。其实此时内存值已经被其他线程修改，但线程1无法判断，认为内存值没有被修改。
+    解决方案：
+        1、版本号机制，数据被修改一次，版本号+1，每次比对时加上版本号一起比对
+
+谈谈AQS，AQS底层为什么用cas+volatile
     
 threadLocal
     
@@ -741,7 +804,8 @@ Mysql
         B树叶子节点的之间没有双向指针，B+树叶子节点之间有双向指针，B+树叶子节点所有索引值天然排序；
         
     为什么很少用Hash索引：
-        hash索引使用类似hash表的结构，数组+链表，不支持范围查询
+        hash索引使用类似hash表的结构，数组+链表，不支持范围查询，也不支持排序
+        数据量大的话，hash冲突多，链表遍历耗时
     为什么不使用二叉树：
         B+树每个节点包含更多的索引值，一次性能够加载更多的数据，减少磁盘IO，而且能够降低树的高度，减少查询次数和复杂度；
         
@@ -749,6 +813,18 @@ Mysql
         普通索引（非主键索引）：先扫描普通索引树定位主键值，再扫描主键索引树定位行记录。
     覆盖索引：
         查询的字段在索引树上，即触发覆盖索引。常见实现覆盖索引的方法是：将被查询的字段，建立到联合索引里去。
+    最左匹配：
+        针对组合索引。
+        例如：a,b,c 为组合索引
+            where a= ? and b=?  走索引
+            where a = ？and c= ? 走索引,只使用a
+            where a = ？and b>? and c= ? 走索引,只使用a,b
+            where a = ？and b like '%xxx%' and c= ? 走索引,只使用a
+            where b =? and c=? 不走索引
+            where b = ? and c =? and a=? 也会走索引，mysql会帮助优化，调整顺序
+            select a,b,c from t where c = ? 走索引
+    索引下推：   
+        
     explain关键字
         id：标识符 执行顺序的标识，id越大优先级越高，id相同，从上往下顺序执行
         select_type: 查询类型  SIMPLE（简单查询）、PRIMARY（复杂查询的最外层查询）、UNION等
@@ -790,7 +866,14 @@ Mysql
     undo log：
         作用：1、回滚；2、mvcc
         undo log是逻辑日志，可以理解为：将对应的写操作记录一条相反操作的日志
-            
+        
+    bin log
+        二进制日志
+        写入时机：写数据入redo log buffer进入prepare状态->bin log->redo log commit
+        binlog日志刷盘策略：根据sync_binlog参数设置
+            sync_binlog=0  提交事务只写，不刷盘
+            sync_binlog=1  每次提交事务，就刷盘
+            sync_binlog=N  每次提交事务都写，但积累N个事务后才刷盘
         
     mysql主从复制过程：
         1、主节点 bin log dump线程
@@ -804,13 +887,18 @@ Mysql
         2、半同步复制：只要有一台从节点同步成功，就返回主节点成功
         
     主从复制延迟原因，解决方案：
-        原因：读写分离，主库写，从库读。主库的DDL/DML操作顺序产生binlog效率很高，从库的sql线程是单线程，效率低，还可能与其他查询操作产生锁竞争，当业务繁忙时，产生的DDL超过SQL进程所承受的范                围，执行会产生延时，从而同步数据就会出现延迟
+        原因：读写分离，主库写，从库读。
+            主库的DDL/DML操作顺序写binlog效率很高，从库IO读取主库的binlog也是顺序读，效率也很高，
+            从库写relay log也是顺序写，效率高，从库SQL线程解析relay log也是顺序读，效率也高，
+            但是从库的sql线程执行sql时，要先从硬盘文件寻找加载数据然后再修改，比较耗时。而且执行sql线程是单线程，效率低，还可能与其他查询操作产生锁竞争，
+            当业务繁忙时，产生的写操作比较多，前面的流程比较快，最后执行sql的效率很慢，写操作产生堆积，数据同步就会产生延时
         解决方案：
             1、提升硬件配置
             2、增加从库数量，分散压力
-            3、写数据时，确保主从同步成功才返回成功，此方案影响性能一般不考虑
-            4、引入缓存中间件，写数据时，将数据存入缓存，读数据时如果读不到的话就从缓存读取，当数据同步成功后再删除缓存数据
-            4、如果是服务器流量太大，造成业务繁忙影响同步，可以对上层流量进行限流
+            3、如果是服务器流量太大，造成业务繁忙影响同步，可以对上层流量进行限流
+            4、引入缓存中间件，写数据时，将数据存入缓存，读数据时如果读不到的话就从缓存读取，当数据同步成功后再删除缓存数据，一般用不到
+            5、写数据时，确保主从同步成功才返回成功，此方案影响性能一般不考虑
+            6、MTS（multi-thread-slave），多线程执行sql（但会引入很多其他问题）
             
     mvcc 多版本并发控制:
         mvcc主要为了提高并发读写性能，不用加锁就能实现多个事务并发读写，通过undo log和read-view实现
@@ -1034,3 +1122,34 @@ canal 工作原理
     1、canal 模拟 MySQL slave 的交互协议，伪装自己为 MySQL slave ，向 MySQL master 发送dump 协议
     2、MySQL master 收到 dump 请求，开始推送 binary log 给 slave (即 canal )
     3、canal 解析 binary log 对象(原始为 byte 流)
+
+es
+
+    倒排索引：
+        通过分词策略，形成词典和文章的映射关系，映射表存储单词存在的位置和次数，词典+映射表就是倒排索引。
+    
+    数据写入文档流程：
+        1、客户端选择一个节点发送请求，这个节点就是协调节点
+        2、协调节点根据文档id对文档进行路由得到对应存储的shard分片，并将请求转发到分片所在节点
+        3、所在分片接收到请求后，将数据先存储到memory buffer中，同时为了保存持久化数据不丢失，也会将数据存储到translog buffer中，translog会根据策略持久化到磁盘中
+        4、执行refresh操作，每秒（或memory buffer满了）将memory buffer中的数据刷到segment fileSystem buffer中（此时数据会建立索引，可以被搜索到），
+            同时生成一个comimit point记录数据执行到哪个segment中
+        5、每30分钟或trans log满了后，会执行flush操作，此时先执行refresh，再将segment中的数据commit到磁盘中，完成持久化后会清除旧的translog文件
+        6、refresh操作每秒一次，会产生很多segment文件，es后台会自行对segment文件进行合并merge操作，并丢弃被标记删除的数据，形成一个新的segment文件以供快速搜索
+        7、如果节点有副本，数据会同步到副本中，当协调节点发现存储节点和副本节点都完成后，就返回相应给客户端
+        
+    可靠性（持久性）保证：
+        trans log事务日志
+        
+    删除/更新数据的原理：
+        执行删除请求，文档并没有被真正的删除，而是在.del文件中被标记为删除。该文档依旧能被匹配查询到，不过会在结果中被过滤掉。并且在执行segment合并时，在.del文件中的数据不会被合并到新segment文件中
+        执行更新请求，会创建新文档，并指定一个新版本号，旧版本的文档会在.del文件中被标记为删除，新版本文档会索引到新segment中，查询返回时会对结果进行过滤
+        
+    数据搜索流程：
+        es搜索分为query和fetch两个步骤
+        query：
+            协调节点将查询请求广播到每个节点的每个分片上，每个分片返回对应查询数据的文档id和排序值
+        fetch：
+            协调节点对文档进行聚合排序，再根据文档id请求对应分片，返回最终的文档。
+        协调节点将结果返回客户端。
+        es数据先写入memory buffer，而查询是查询segment buffer中的数据，因为refresh是每秒一次，所以es查询是近实时的
