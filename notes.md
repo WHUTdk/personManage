@@ -31,14 +31,46 @@ HashMap并发问题
     1.7数据丢失
     1.8会产生数据丢失
         数据丢失：比如多线程同时执行p.next = newNode(hash, key, value, null);两个线程都获取到p.next，执行完后，有一个数据会被丢失
+
+hashMap的put()方法流程
+
+    1、(tab.length - 1) & hash计算数据下标位置
+    2、如果该位置为空，就将key-value封装为Entry/Node对象（1.7Entry对象，1.8Node对象）,添加到空位置中
+    3、如果该位置不为空
+        1.7 先判断数组是否需要扩容，需要就扩容，不需要，就将Entry对象通过头插法插入链表中
+        1.8 先判断当前位置Node的类型，是红黑树还是链表
+            如果是红黑树，将k-v封装为Node对象添加到红黑树中，如果key已存在，则更新value
+            如果是链表，将k-v封装为Node对象遍历链表，通过尾插法插入链表尾部，遍历中如果key已存在，则更新value
+                链表尾部插入元素后，判断链表长度，如果超过8，就转为红黑树
+            插入元素到红黑树或链表后，再判断是否需要扩容    
+
+HashMap扩容机制
+
+    扩容时机：
+        1、插入元素时，先判断数组长度是否大于64，不大于的话就扩容
+        2、map元素个数达到阈值（数组长度*加载因子）
     
 concurrentHashMap
 
     1.7
     1.8
         初始化使用cas
-        put时数组元素为空，使用cas自旋插入，数组元素不为空，使用synchronied锁住链表头节点
+        put时数组元素为空，使用cas自旋插入，数组元素不为空，使用synchronied锁住头节点
 
+concurrentHashMap扩容机制：
+
+    1.7
+        1、基于segment分段机制实现，每个segment相当于一个小的hashMap
+        2、每个segment内部会进行扩容，和hashMap的扩容机制类似
+        3、先生成新的数组，然后转移数据到新数组中
+        4、扩容的判断也是每个segment单独判断，判断是否超过阈值
+    1.8    
+        1、某个线程put时，发现正在扩容，那么该线程会参与一起进行扩容
+        2、put时，没有在扩容，先将数据添加到map中，再判断是否超过阈值，超过就进行扩容
+        3、扩容之前也是生成一个新数组
+        4、转移元素时，先将原数组分组，将每组分给不同的线程进行元素转移，每个线程负责一组或多组元素的转移工作
+        5、元素转移插入时，1.8进行了优化，新下标位置只分为两种，原数组下标或原数组下标+原数组长度
+    
 谈谈对spring的理解：
 
     spring是一个框架，帮我们起到了一个IOC容器的作用，用来承载我们整体的Bean对象，他帮我们进行了整个对象从创建到销毁的整个生命周期的管理。
@@ -58,7 +90,7 @@ spring bean生命周期
     8.检查是否实现InitializingBean接口，以决定是否调用afterPropertiesSet方法
     9.检查是否配置自定义的init-method方法
     10.执行BeanPostProcessor的after方法：postProcessAfterInitialization
-    11.注册必要的Destrucuion相关回调接口
+    11.注册必要的destructionCallback相关回调接口
     12.使用中...
     13.检查是否实现DisposableBean接口，执行destroy方法
     14.检查是否配置自定义销毁方法，有的话执行
@@ -110,8 +142,14 @@ spring事务原理
     spring事务首先要基于数据库引擎的事务实现。分为编程式事务和声明式事务。
     编程式事务：通过TransactionTemplate或TransactionManager手动管理事务，实际很少使用
     声明式事务：通过注解+AOP实现
+        1、对使用了@Transactional注解的Bean，spring会创建代理对象
+        2、当调用代理方法时，判断方法上是否加了@Transactional注解
+        3、加了事务注解的话，则会利用事务管理器创建数据库连接
+        4、修改数据库连接的autocommit为false，禁止自动提交
+        5、执行sql
+        6、如果有异常，判断异常是否需要回滚，需要的话就回滚，否则仍然提交事务
     spring事务主要包含五个属性来管理事务：
-        1、隔离级别
+        1、隔离级别（对应数据库的隔离级别）
         2、传播行为
         3、回滚规则（可以指定回滚异常）
         4、是否只读
@@ -127,14 +165,14 @@ spring事务的传播机制
     （3）必须要有事务
         PROPAGATION_REQUIRED：默认配置。没有就新建事务，有就使用当前事务
         PROPAGATION_REQUIRED_NEW：不管有没有，都新建事务，原来有就将原事务挂起。内部事务抛异常回滚，并向上抛出异常，外部事务也会异常回滚。外部事务异常回滚，内部事务不会回滚
-        PROPAGATION_NESTED；没有就新建事务，有就嵌套事务。如果嵌套，内部事务异常回滚，不管是否抛出，外部事务都会正常提交
+        PROPAGATION_NESTED；没有就新建事务，有就嵌套事务。如果嵌套，内部事务异常回滚，并且向上抛出，外部事物也会回滚
         PROPAGATION_MANDATORY：没有就抛出异常，有就使用当前事务
 
 spring事务失效场景
     
-    spring事务的实现原理是AOP，事务失效的根本原因是AOP不起作用。
+    spring事务的实现原理是AOP，大部分事务失效的根本原因是AOP不起作用。
         1、发生自调用，类里面使用this调用方法，此时的this不是代理对象而是类对象本身，事务不会生效
-        2、方法不是public的
+        2、方法不是public的（cglib代理基于父子类，private私有方法无法被子类覆盖）
         3、数据库存储引擎不支持事务
         4、事务未被spring管理
         5、事务指定异常了，抛出的异常非指定的异常
@@ -144,19 +182,16 @@ AOP实现原理
 
     核心类AbstractAutoProxyCreator，实现了BeanPostProcessor接口，postProcessAfterInitialization方法中执行了代理逻辑
 
-    在bean初始化中的BeanPostProcessor接口实现的postProcessAfterInitialization方法中，判断是否需要AOP，
+    BeanPostProcessor接口实现的postProcessAfterInitialization方法中，判断是否需要AOP，
     需要的话，执行代理逻辑，使用JDK（基于接口）或cglib（基于父类）实现动态代理。
     进入代理拦截逻辑invoke方法中,先获取切面的通知调用链集合，如果没有通知，则直接用原始对象执行方法，
-    如果有通知，创建一个调用链对象CglibMethodInvocation，执行proceed方法，通知调用链遍历执行invoke方法，invoke方法又递归执行proceed方法，
+    如果有通知，创建一个调用链对象（责任链模式），执行proceed方法，调用链遍历执行对应通知代理拦截的invoke方法，invoke方法又递归执行proceed方法，
     递归到最后，执行目标实际方法。目标方法执行完后，递归返回。
     因为around前置和before通知的逻辑在实际方法之前，after通知的逻辑在实际方法之后，所以经过递归执行后，
-    实际的逻辑执行顺序：around前置逻辑->before逻辑->实际方法->after逻辑->afterreturning逻辑->around后置逻辑
+    实际的逻辑执行顺序：around前置逻辑->before逻辑->实际方法->around后置逻辑->after逻辑->afterreturning逻辑
     
-    通知的实际逻辑执行顺序(责任链模式)：
-        spring4.0：
-        around-before-afterthrowing（有异常的话）/afterreturning-after-around
-        spring5.28：
-        around-before-after-afterthrowing（有异常的话）/afterreturning-around
+    通知的实际逻辑执行顺序：
+        around-before-method-around-after-afterthrowing（有异常的话）/afterreturning
 
 类加载器、加载机制、加载过程
         
@@ -185,7 +220,7 @@ AOP实现原理
         
 jvm内存结构
 
-    1.寄存器：较小的内存空间，通过计数器选取下一条要执行的字节码指令
+    1.寄存器：较小的内存空间，通过计数器选取下一条要执行的字节码指令。寄存器不会产生内存溢出。
     2.虚拟机栈：线程运行需要的内存空间，每个方法运行时会创建一个栈帧，保存方法参数、局部变量、返回值等信息
     3.本地方法栈:非Java代码方法运行时需要的内存空间，比如Object类的clone()、notify()、hashCode()
     4.堆：年轻代（eden区、survivor1、survivor2，内存占比8:1:1）和老年代old（老年代约占堆2/3）。
@@ -281,7 +316,7 @@ springboot启动过程、自动配置原理
         AutoConfigurationImportSelector，内部会执行importSelector类的getAutoConfigurationEntry()方法
         
     10、refresh()方法执行完后，记录启动结束时间和启动日志
-    11、监听器发布时间
+    11、监听器发布事件
     12、callRunners(context, applicationArguments);真正启动springboot应用
     
     @SpringBootApplication注解：
@@ -291,7 +326,7 @@ springboot启动过程、自动配置原理
                @AutoConfigurationPackage：获取启动类所在包路径，作为自动配置扫描包
                @Import(AutoConfigurationImportSelector.class):               
                    AutoConfigurationImportSelector内部主要逻辑：
-                   1.加载spring.factories下所有自动配置类（文件中EnableAutoConfiguration= 后的所有类）
+                   1.加载META-INF/spring.factories下所有自动配置类（文件中EnableAutoConfiguration= 后的所有类）
                    2.去重、排除、过滤，去除不合格的配置类
                    3.通过监听事件，通知各个组件配置类，通过项目的properties/yml文件进行自动配置
            
@@ -332,9 +367,9 @@ springboot jar为什么能直接运行？
     然后根据JarFileArchive集合创建类加载器LaunchedURLClassLoader
     之后会另起一个线程执行Start-Class指向的自定义的main方法，该main方法执行后，会构造spring容器和启动内置servlet容器等过程
 
-自定义springboot-stater
+自定义springboot-starter
 
-    自定义jar包命名规则：xxx-spring-boot-stater
+    自定义jar包命名规则：xxx-spring-boot-starter
     配置类加上@Configuration注解
     具体自定义实现方法，有多种方式：
         1、META-INF/spring.factories文件下放入配置类的全限定类名
@@ -348,7 +383,12 @@ redis数据结构
         操作字符串，redis会执行以下操作：1、计算出大小是否足够；2、开辟空间至满足所需大小
         优点：1、快速获取字符串长度；2、避免缓冲区溢出；3、降低空间分配次数提升内存使用效率
     2、List
-        压缩列表zipList、双端列表linkedList
+        redis3.2之前：压缩列表zipList、双端列表linkedList
+        redis3.2之后 快速列表quickList
+        zipList：连续内存组成的顺序型数据结构，每个节点保存一个字节数组或整数值，空间利用率高。
+                linkedList转为zipList的转换条件：list-max-ziplist-value  列表所有元素长度小于64字节
+                                              list-max-ziplist-entries  列表元素个数小于512
+        quicklist：zipList和LinkedList的结合
     3、set
         整数值集合intSet、hashTable
     4、zset
@@ -439,6 +479,11 @@ redis集群模式
             如果master被标记为客观下线，那么频率会变为每秒一次发送info 命令
         当使用sentinel模式的时候，客户端就不要直接连接Redis，而是连接sentinel的ip和port，由sentinel来提供具体的可提供服务的Redis实现，
         这样当master节点挂掉以后，sentinel就会感知并将新的master节点提供给使用者。
+        
+        脑裂：集群中不同节点，对集群状态有不同的理解
+            情景理解：
+        
+        
     3、Cluster模式
         sentinel模式基本可以满足一般生产的需求，具备高可用性。但是当数据量过大到一台服务器存放不下的情况时，主从模式或sentinel模式就不能满足需求了，
         这个时候需要对存储的数据进行分片，将数据存储到多个Redis实例中。cluster模式的出现就是为了解决单机Redis容量有限的问题，将Redis的数据根据一定的规则分配到多台机器。
@@ -451,6 +496,8 @@ redis集群模式
         cluster什么情况会进入完全不可以状态
             1、master挂掉，且当前master没有slave，导致hash槽映射不完整（某个范围内的哈希槽不可用），集群会进入fail不可用状态
             2、如果集群超过半数master挂掉，无论是否有slave，整个集群都会进入fail不可用状态
+
+redis主从复制
 
 redis数据库缓存一致性
 
@@ -537,7 +584,7 @@ IO、NIO、BIO
     线程池拒绝策略：
         1.ThreadPoolExecutor.AbortPolicy:丢弃任务并抛出RejectedExecutionException异常。
         2.ThreadPoolExecutor.DiscardPolicy：也是丢弃任务，但是不抛出异常。
-        3.ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务（重复此过程）
+        3.ThreadPoolExecutor.DiscardOldestPolicy：丢弃队首的任务，然后重新尝试执行任务（重复此过程）
         4.ThreadPoolExecutor.CallerRunsPolicy：重试添加当前的任务，自动重复调用 execute() 方法，直到成功
 
 常见线程阻塞队列
@@ -638,7 +685,7 @@ volatile
         
 synchronized底层实现原理
 
-    底层锁信息存储在锁对象的对象头的mark word中，不同的锁状态对应不同的存储信息和锁标志位。
+    synchronized锁的是对象，底层锁信息存储在锁对象的对象头的mark word中，不同的锁状态对应不同的存储信息和锁标志位。
     偏向锁：mark word存储的线程id
     轻量级锁：mark word存储的指向栈中轻量级锁的指针
     重量级锁：mark word存储指向堆中重量级锁的指针
@@ -676,8 +723,32 @@ cas的ABA问题如何解决？
     解决方案：
         1、版本号机制，数据被修改一次，版本号+1，每次比对时加上版本号一起比对
 
+synchronized和reentrantLock区别
+    
+    1、synchronized是关键字，reentrantLock是一个类
+    2、synchronized会自动加锁和释放锁，reentrantLock需要手动加锁和释放锁
+    3、synchronized是jvm层面实现的锁，reentrantLock是api层面实现的锁
+    4、synchronized是非公平锁，reentrantLock可以选择公平锁和非公平锁
+    5、synchronized锁的是对象，reentrantLock锁的是线程，底层基于AQS实现锁竞争
+    6、synchronized底层有锁升级的过程
+
 谈谈AQS，AQS底层为什么用cas+volatile
     
+    AQS：AbstractQueuedSynchronizer
+        state：默认0，cas方式获取锁，有线程获取锁后+1，锁重入一次也+1，释放锁一次-1
+        exclusiveOwnerThread：当前锁线程
+        阻塞队列：Node节点组成，volatile修饰节点的属性，比如prev、next、waitStatus、thread
+        head：阻塞队列的头，初始化时为空节点（无线程），队列添加线程后，会移除头空节点，添加该线程的节点变为头
+        tail：阻塞队列的尾，尾部为空时说明队列需要初始化     
+        
+        原理：线程使用cas判断修改state是否为0，加锁成功后，state变为1，exclusiveOwnerThread指向获取锁的线程，
+            线程2尝试获取锁，加锁失败，加入队列的队首中。其余竞争线程依次加入队列中。
+            尝试获取锁时，分为公平锁和非公平锁、
+               非公平锁：直接cas判断获取
+                公平锁：判断队列是否有线程且不是当前线程+cas     
+        
+        ReentrantLock和CountDownLatch底层都是基于AQS实现的       
+            
 threadLocal
     
     线程维护一个ThreadLocalMap,map的key为threadLocal对象（实例对象的引用地址），value为存储的值。
@@ -874,7 +945,9 @@ Mysql
             sync_binlog=0  提交事务只写，不刷盘
             sync_binlog=1  每次提交事务，就刷盘
             sync_binlog=N  每次提交事务都写，但积累N个事务后才刷盘
-        
+    
+    读写分离实现原理：
+    
     mysql主从复制过程：
         1、主节点 bin log dump线程
             当从节点连接主节点时，主节点会创建一个log dump线程，用于发送bin log内容
@@ -885,6 +958,11 @@ Mysql
     同步方式：
         1、全同步复制：所有从节点同步完成才返回主节点成功，性能低
         2、半同步复制：只要有一台从节点同步成功，就返回主节点成功
+        
+    主从同步方式：
+        1、SBR 基于SQL语句的复制
+        2、RBR 基于行的复制
+        3、MBR 混合模式复制
         
     主从复制延迟原因，解决方案：
         原因：读写分离，主库写，从库读。
@@ -918,6 +996,60 @@ Mysql
 
     
 dubbo
+
+    dubbo各服务总体调用关系
+        1、服务容器负责启动、加载，运行服务提供者
+        2、服务提供者在启动时，向注册中心注册自己提供的服务
+        3、服务消费者在启动时，向注册中心订阅自己所需的服务
+        4、注册中心返回服务提供者地址列表给消费者，如果有变更，注册中心将基于长连接推送变更数据给消费者
+        5、消费服务者，从提供者列表中，基于负载均衡算法，选择一台提供者进行调用
+        6、服务消费者和提供者。在内存中累计调用次数和调用时间，定时每分钟发送一次统计数据到监控中心
+           
+    dubbo服务暴露的过程：
+        Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布 ContextRefreshEvent 事件的时候，
+        通知实现了 ApplicationListener 的 ServiceBean 类进行回调 onApplicationEvent 事件方法，
+        Dubbo 会在这个方法中调用 ServiceBean 父类 ServiceConfig 的 export 方法，而该方法真正实现了服务的（异步或者非异步）发布。
+        export()内部逻辑：
+            doExportUrls()，执行url组装，组装完成后，根据作用域，判断是导出到local还是remote。默认都会进行本地暴露
+            本地暴露：
+                1、通过proxyFactory获取invoker，invoker代表一个可执行体，可以将需要代理的方法，用invoker进行处理
+                2、获取dubbo协议对象（参考dubbo支持的协议）
+                3、通过协议调用export()方法，获取本地inJvmExporter对象，并将对象信息存放在exportMap中
+                    inJvmExporter对外暴露invoker。通过Exporter对象可以实现对服务的调用。
+            远程暴露：
+                1、根据URL对象，遍历注册中心，获取监控中心
+                2、proxyFactory获取invoker
+                3、registryProtocol.export()->doLocalExport()->dubboProtocol.export()->openServer()->createServer()->doOpen(),最终启动服务，绑定端口
+                4、开始注册服务，获取Registry对象（通过SPI机制获取真正的Registry对象，比如ZookeeperRegistry），执行服务注册,zkClient.create()
+                5、registry订阅服务，监听服务变化
+                6、返回Export对象，每次返回新对象
+                
+    proxyFactory：
+         SPI ExtensionLoader  拓展点加载器
+         通过配置文件和SPI机制获取，配置文件包括以下几种代理：
+         javassist默认、jdk、stub
+     
+     dubbo服务注册原理：
+             远程暴露过程中实现服务注册，参考远程服务暴露
+               
+    dubbo服务引用原理：
+        入口：new ReferenceConfig<>().get(),获取客户端dubbo的代理类，get()方法内部逻辑：
+        1、加载配置信息
+        2、createProxy()
+        3、从配置信息获取注册中心信息
+        4、registryProtocol.refer()方法，客户端连接zk，创建消费者节点
+        5、构建动态目录RegistryDirectory，该目录订阅、维护服务提供者，并缓存提供者信息
+        6、通过集群方案，返回一个invoker
+        7、proxyFactory.getProxy(invoker),对invoker进行代理
+        8、new InvokeInvocationHandler(invoker)，传入生成的invoker，构造handler
+        9、handler内部执行invoker.invoke()方法，传入调用的方法对象和参数
+        10.invoke()方法内部通过负载均衡选择一个invoker，执行实际调用
+        
+        
+    客户端方法调用的流程：
+        dubbo客户端生成代理类，代理类传入InvokeInvocationHandler对象，InvokeInvocationHandler构造方法传入invoker对象
+        service.method()(客户端调用原始方法)->handler.invoke()(进入代理类执行invoke方法)->invoker.invoke()->doInvoke()->负载均衡选择invoker->invoker.invoke()真正调用
+        
     
     超时时间：默认1000ms
     重试次数：默认3次（不包含第一次，失败后重试三次）
@@ -937,7 +1069,7 @@ dubbo
         2、RoundRobin，基于权重的轮询
             实现原理：
                 1、设置maxCurrent，记录当前最大权重值。concurrentHashMap记录每个URL的权重对象，invokers数量变动时，map会清理重置
-                2、遍历invokers，比较maxCurrent，获取集合中最大权重的invoker
+                2、遍历invokers，比较设置maxCurrent，获取集合中最大权重的invoker
                 3、将本次使用的invoker权重置为最低，以便下次不会再使用
         3、LeastActive，最少活跃数，选择上一次请求耗时最短的服务器
             实现原理：
@@ -1004,17 +1136,6 @@ dubbo
         4、monitor：监控中心，可以统计服务调用次数和调用时间
         5、container：服务运行容器
     
-    dubbo服务注册原理：
-        
-    
-    dubbo服务暴露的过程：
-        Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布 ContextRefreshEvent 事件的时候，
-        通知实现了 ApplicationListener 的 ServiceBean 类进行回调 onApplicationEvent 事件方法，
-        Dubbo 会在这个方法中调用 ServiceBean 父类 ServiceConfig 的 export 方法，而该方法真正实现了服务的（异步或者非异步）发布。
-        
-    dubbo服务调用原理：
-    
-    
     有多个同名服务，怎么连接指定服务？
         可以配置环境点对点直连，绕过注册中心，将以服务接口为单位，忽略注册中心的提供者列表。
     
@@ -1054,9 +1175,14 @@ dubbo
             1、META-INF/dubbo/internal
             2、META-INF/dubbo/
             3、META-INF/services/
-        
-    dubbo和springCoud比较
-        
+        dubbo的proxyFactory和protocol就是通过SPI机制获取的
+        例如：
+            指定名称方式：
+                PrxyFactory jdkproxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getExtension("jdk")
+            自适应方式，根据运行时参数：
+                PrxyFactory jdkproxyFactory = ExtensionLoader.getExtensionLoader(ProxyFactory.class).getAdaptiveExtension()
+                自适应实现需要通过@Adaptive注解，该注解作用在方法上时，dubbo会为此方法生成代理逻辑
+                
 zookeeper
 
     启动时选举流程
@@ -1066,6 +1192,8 @@ zookeeper
     怎么保证强一致性
     
     ZAB协议
+    
+    服务提供者能实现失效踢出是根据什么原理?
         
 rocketMq
         
@@ -1088,19 +1216,34 @@ rocketMq
         2、异步刷盘
             数据先存储到os cache中，再异步刷到磁盘。吞吐量高，但可能丢数据
         3、零拷贝
+            mmp+write
                 
+    负载均衡：
+        发送消息负载均衡：
+            同一个topic，多个队列，发送消息轮询队列
+        消费消息负载均衡：
+            5个队列，2个消费者，则consumer1消费3个队列，consumer2消费2个队列
+            如果consumer数量大于队列数，那么多余的consumer将空闲不能消费消息
+        
     mq如何保证高可用？
     
     mq如何防止重复消费？
-        1、rocketmq每条消息有messageId，可以做唯一校验
-        2、业务上实现幂等        
+        1、生产端查找原因为什么会重复发送
+        2、rocketmq每条消息有messageId，可以做唯一校验
+        3、业务上实现幂等        
     
     mq如果保证顺序消费？
         生产者：
             1、业务上保证顺序发送
             2、rocketmq自带了发送方法，将唯一业务值作为hashKey，可以实现相同的业务数据发送到相同的队列上
+            局部有序：相同业务，发到相同队列
+            全局有序：只使用一个队列
         消费者：
-            rocketmq提供了顺序消费模式
+            rocketmq提供了顺序消费模式。同一个队列只会被同一个消费者消费。（一个消费者可以消费多个queue和topic，但一个queue只会被同一个consumer消费）
+            消费线程请求到broker时，会申请独占锁，获得锁后，才会消费。消费成功后，手动提交偏移量。
+            
+    mq顺序消费的原理：
+        
     
     mq发送端消息推送失败怎么办？
     
@@ -1134,9 +1277,14 @@ es
         3、所在分片接收到请求后，将数据先存储到memory buffer中，同时为了保存持久化数据不丢失，也会将数据存储到translog buffer中，translog会根据策略持久化到磁盘中
         4、执行refresh操作，每秒（或memory buffer满了）将memory buffer中的数据刷到segment fileSystem buffer中（此时数据会建立索引，可以被搜索到），
             同时生成一个comimit point记录数据执行到哪个segment中
-        5、每30分钟或trans log满了后，会执行flush操作，此时先执行refresh，再将segment中的数据commit到磁盘中，完成持久化后会清除旧的translog文件
+        5、每30分钟或trans log满了后（默认512M），会执行flush操作，此时先执行refresh，再将segment中的数据commit到磁盘中，完成持久化后会清除旧的translog文件
         6、refresh操作每秒一次，会产生很多segment文件，es后台会自行对segment文件进行合并merge操作，并丢弃被标记删除的数据，形成一个新的segment文件以供快速搜索
         7、如果节点有副本，数据会同步到副本中，当协调节点发现存储节点和副本节点都完成后，就返回相应给客户端
+        
+    写操作一致性consistency：
+        one：主分片状态OK，就允许写
+        all：所有主分片和副本状态都是OK，才允许写
+        quorum：默认值。所有的分片中，大部分分片状态OK，就允许写  shardNum = int( (primary + number_of_replicas) / 2 ) + 1
         
     可靠性（持久性）保证：
         trans log事务日志
@@ -1146,10 +1294,67 @@ es
         执行更新请求，会创建新文档，并指定一个新版本号，旧版本的文档会在.del文件中被标记为删除，新版本文档会索引到新segment中，查询返回时会对结果进行过滤
         
     数据搜索流程：
-        es搜索分为query和fetch两个步骤
+        分为query和fetch
         query：
-            协调节点将查询请求广播到每个节点的每个分片上，每个分片返回对应查询数据的文档id和排序值
+            1、请求发送到协调节点
+            2、协调节点请求转发到所有分片，每个分片本地会构建一个priority queue，大小为from+size，存放文档id和排序值（不用返回文档，因为后续还要继续排序分页）
+            3、协调节点合并构建一个全局排序的priorityqueue，并对from+size之间的文档id执行下一步请求
+            比如，查询100,10的分页数据，每个分片都会查询加载前100页+101页前10 的所有数据到内存中，然后协调节点将所有返回数据合并，排序后再根据100，10进行截取获取实际要的文档id  
         fetch：
-            协调节点对文档进行聚合排序，再根据文档id请求对应分片，返回最终的文档。
-        协调节点将结果返回客户端。
-        es数据先写入memory buffer，而查询是查询segment buffer中的数据，因为refresh是每秒一次，所以es查询是近实时的
+            1、协调节点根据文档id，路由计算，请求数据对应的主分片或副本（轮询方式请求）
+            2、各分片返回文档给协调节点
+            3、协调节点按照之前的排序值，对文档进行合并、排序
+            4、协调节点将结果返回客户端
+        es数据先写入memory buffer，而查询能查询到segment buffer中的数据，因为refresh是每秒一次，所以es查询是近实时的
+        
+    es副本
+        1、高可用，因此，副本分片不能与原、主分片在同一个节点（交叉备份）
+            如果只有一个节点，那么副本将不会被分配到节点中，副本无效
+        2、拓展搜索量、吞吐量，搜索时可以利用副本分片
+    
+    es分片
+        分片数目，在索引创建时就缺点，后续不能改，但是可以动态修改副本数
+        1、水平分割拓展数据量
+        2、查询可以并行查询，提高查询效率和吞吐量
+        分片数量设置规则：
+            1、每个分片占用硬盘容量不超过ES最大JVM的堆空间大小
+            2、分片数不要大大超过节点数，否则一个节点有太多分片，如果该节点故障，那么丢失的数据就会越多。分片数一般不超过节点数的3倍
+        
+    写数据路由计算：
+        对文档id(_id字段值)进行hash运算，然后对主分片数取模   hash(_id)%主分片数
+    
+    读数据分片控制：
+        客户端可以访问任何一个节点的数据（一般是轮询访问节点），访问的节点称为协调节点
+        
+    es并发情况，如何保证读写一致？
+        1、数据增加版本号，乐观锁机制，应用层处理并发冲突
+        2、一致性配置：one/one/quonum
+        3、设置replication参数为sync，如果设置为async,也可以设置请求参数_prefercence为primary来查询主分片，保证数据是最新的
+        
+    es分页查询
+        实现方案：
+            1、from+size浅分页
+                原理：每个分片返回from+size的数据，协调节点合并排序数据再进行from+size筛选，数据都是加载到内存中，
+                    优点：支持跳页查询，支持实时查询
+                    缺点：如果分页from参数太大的话，内存加载的数据就会越多，深度分页会造成内存溢出
+            2、scroll深分页
+                原理：每次获取一页的数据，返回一个scroll_id。然后根据scroll_id进行下一页的查询。
+                     scroll分为初始化和遍历两部分，遍历时是从初始化完的快照中读取数据，初始化后的写数据无法被读取，所以不支持实时查询
+                    优点：深度分页不会造成内存溢出
+                    缺点：不支持跳页查询，也不支持实时查询
+                    
+网络七层协议
+
+    1、物理层
+    2、数据链路层
+    3、网络层  ip
+    4、传输层  tcp、udp
+    5、会话层  rpc、sql
+    6、表示层  加密、ASCII
+    7、应用层  http、telnet、ftp
+    
+https安全传输
+
+    1、客户端向服务端发送数据之前，需要先建立tcp连接，建立完tcp连接后，服务端会先给客户端发送公钥，客户端拿到公钥后就可以用来加密数据，
+        服务端接收到数据后可以用私钥解密数据，这种就是通过非对称加密来传输数据
+    2、
