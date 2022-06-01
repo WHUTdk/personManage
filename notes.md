@@ -940,7 +940,7 @@ Mysql
         
     bin log
         二进制日志
-        写入时机：写数据入redo log buffer进入prepare状态->bin log->redo log commit
+        写入时机：写数据入redo log buffer进入prepare状态->bin log cache->redo log commit-> bin log file
         binlog日志刷盘策略：根据sync_binlog参数设置
             sync_binlog=0  提交事务只写，不刷盘
             sync_binlog=1  每次提交事务，就刷盘
