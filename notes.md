@@ -929,10 +929,20 @@ Mysql
         数据加载到Buffer Pool后，执行写操作，生成redo log，存在log buffer区域，然后顺序持久化到redo log文件中（mysql重启后会加载redo log文件，保证事务持久性）
         redo log采用WAL预写式日志，分为prepare和commit两个阶段，更新数据写入到redo log内存后处于prepare状态，再告知执行器执行完成，随时可以提交事务
         默认有两个文件 logfile0  logfile1  每个默认48M，循环写入。持久化策略可配置，默认是事务提交后，脏页数据同步从内存持久化到redo log file中
-        write position
-        check point
+        redo log 以块的形式保存，重做日志块redo log block，每块大小512字节，磁盘扇区是磁盘写入的最小单位，也是512字节，所以redo log刷盘具有原子性，没有双写机制。
+    
+    redo log刷盘策略：参数innodb_flush_log_at_trx_commit
+                    0：事务提交时不写入，仅在master thread中进行，master thread每1秒调用一次fsync操作；
+                    1：事务提交时，调用一次fsync操作；
+                    2：事务提交时，仅写入文件系统缓存中不写入磁盘，不同文件系统刷盘时机各不一样。
+    
+    LSN：Log Sequence Number 日志序列号
+        1、重做日志写入的总量
+        2、checkpoint的位置
+        3、页的版本
+        
     double write buffer:
-        触发check point后，会将buffer pool中的脏数据刷入磁盘，该过程根据双写机制，保证脏数据能够可靠的刷盘。
+        。
         
     undo log：
         作用：1、回滚；2、mvcc
