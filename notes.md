@@ -260,8 +260,8 @@ jvm内存分代模型
 
 jvm垃圾回收器
 
-    新生代回收器：serial(标记-整理算法)、Parallel Acavenge(标记-复制算法)、parNew(标记-整理算法)
-    老年代回收器：cms(基于标记-清除算法)、serial old(标记-复制算法)、parallel old(基于标记-整理算法)
+    新生代回收器：serial(标记-整理算法)、parNew(标记-整理算法)、Parallel Acavenge(标记-复制算法，jdk1.7/1.8新生代默认算法)
+    老年代回收器：cms(基于标记-清除算法)、serial old(标记-复制算法)、parallel old(基于标记-整理算法，jdk1.7/1.8老年代默认算法)
     整堆回收器： G1、ZGC
     
 Minor GC：新生代的垃圾收集
